@@ -44,6 +44,8 @@ const COLORS = {
   traversal: '#818cf8', 
   unbalanced: '#a855f7', 
   processed: '#6366f1',
+  rbRed: '#ef4444',
+  rbBlack: '#0f172a',
 };
 
 const BST_CODE_SNIPPET = `#include <iostream>
@@ -172,6 +174,20 @@ Node* splay(Node* root, int key) {
     }
 }`;
 
+const RB_CODE_SNIPPET = `#include <iostream>
+using namespace std;
+
+enum Color { RED, BLACK };
+
+struct Node {
+    int data; bool color;
+    Node *left, *right, *parent;
+    Node(int data) : data(data) {
+       left = right = parent = NULL;
+       color = RED;
+    }
+};`;
+
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 class Node {
@@ -181,6 +197,7 @@ class Node {
     this.left = null;
     this.right = null;
     this.height = 1;
+    this.color = 'RED'; // Red-Black Tree property
   }
 }
 
@@ -251,7 +268,7 @@ const Dashboard = ({
   view, onHome, root, highlights, inputValue, setInputValue,
   handleInsert, handleDelete, handleReset, handleTraversal, handleSearch, generateRandomTree,
   isProcessing, showLegend, setShowLegend, canvasRef, scrollRef, canvasSize,
-  logs, traversalResult, positions, connections, onShowCode
+  logs, traversalResult, traversalType, positions, connections, onShowCode
 }) => (
   <div className="flex flex-col h-full overflow-hidden bg-[#05060a]">
     <header className="h-20 glass border-b border-white/5 flex items-center px-10 justify-between z-20 shadow-2xl relative">
@@ -352,12 +369,19 @@ const Dashboard = ({
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
             </defs>
-            {connections.map((c) => (
-              <line key={c.id} {...c} stroke="#1e293b" strokeWidth="3" className={`line-transition opacity-40 ${c.isNew ? 'line-draw text-indigo-500 stroke-indigo-500' : ''}`} />
+            {connections.map(({ isNew, ...c }) => (
+              <line key={c.id} {...c} stroke="#1e293b" strokeWidth="3" className={`line-transition opacity-40 ${isNew ? 'line-draw text-indigo-500 stroke-indigo-500' : ''}`} />
             ))}
-            {positions.map((p) => (
+            {positions.map(({ isNew, ...p }) => (
               <g key={p.id} className="node-transition">
-                <circle cx={p.x} cy={p.y} r={NODE_RADIUS} fill={COLORS[p.highlight] || COLORS.default} stroke="rgba(255,255,255,0.06)" strokeWidth="4" filter={p.highlight && p.highlight !== 'default' ? 'url(#glow-node-compact)' : ''} className={`transition-all duration-1000 ${p.highlight === 'unbalanced' ? 'pulse-purple' : p.highlight === 'deleting' ? 'pulse-red' : ''} ${p.isNew ? 'fade-in' : ''}`} />
+                <circle 
+                  cx={p.x} cy={p.y} r={NODE_RADIUS} 
+                  fill={p.highlight && p.highlight !== 'default' ? COLORS[p.highlight] : (view === 'rb' ? COLORS.rbBlack : COLORS.default)} 
+                  stroke={view === 'rb' ? (p.color === 'RED' ? '#ef4444' : 'rgba(255, 255, 255, 0.1)') : "rgba(255,255,255,0.06)"}
+                  strokeWidth="4" 
+                  filter={p.highlight && p.highlight !== 'default' ? 'url(#glow-node-compact)' : ''} 
+                  className={`transition-all duration-1000 ${p.highlight === 'unbalanced' ? 'pulse-purple' : p.highlight === 'deleting' ? 'pulse-red' : ''} ${isNew ? 'fade-in' : ''}`} 
+                />
                 <text x={p.x} y={p.y} textAnchor="middle" dy=".35em" fill="white" fontSize="18" fontWeight="900" fontFamily="monospace" className="pointer-events-none select-none tracking-tighter">{p.value}</text>
                 
                 {view === 'avl' && (
@@ -365,6 +389,14 @@ const Dashboard = ({
                     <rect x="-42" y="-14" width="84" height="28" rx="14" fill="#020617" stroke="#6366f1" strokeWidth="1.5" className="shadow-2xl" />
                     <text x="0" y="5" textAnchor="middle" fill="#6366f1" fontSize="13" fontWeight="900" fontFamily="monospace">
                       {p.hl}-{p.hr}={p.bf}
+                    </text>
+                  </g>
+                )}
+                {view === 'rb' && (
+                  <g transform={`translate(${p.x}, ${p.y - 48})`} className="select-none pointer-events-none">
+                    <rect x="-38" y="-12" width="76" height="24" rx="12" fill={p.color === 'RED' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(15, 23, 42, 0.8)'} stroke={p.color === 'RED' ? '#ef4444' : '#475569'} strokeWidth="1.5" className="shadow-2xl" />
+                    <text x="0" y="4" textAnchor="middle" fill={p.color === 'RED' ? '#ef4444' : '#94a3b8'} fontSize="9" fontWeight="900" fontFamily="monospace" className="uppercase tracking-[0.2em]">
+                      {p.color}
                     </text>
                   </g>
                 )}
@@ -380,7 +412,7 @@ const Dashboard = ({
           <div className="absolute bottom-10 left-10 right-10 glass p-8 rounded-[3rem] border border-white/5 fade-in z-10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden">
             <div className="flex items-center gap-10">
               <div className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.4em] bg-indigo-500/10 px-6 py-3 rounded-2xl border border-indigo-500/20 flex items-center gap-4 shrink-0 shadow-2xl backdrop-blur-md">
-                <Database size={16} className="animate-pulse" /> Sequence Output
+                <Database size={16} className="animate-pulse" /> {traversalType || 'Sequence'} Output
               </div>
               <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth custom-scrollbar pr-32">
                 {traversalResult.map((v, i) => (
@@ -452,6 +484,7 @@ function App() {
   const [inputValue, setInputValue] = useState('');
   const [logs, setLogs] = useState([]);
   const [traversalResult, setTraversalResult] = useState([]);
+  const [traversalType, setTraversalType] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCode, setShowCode] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 1400, height: 900 });
@@ -476,7 +509,7 @@ function App() {
   
   const cloneTree = (n) => {
     if (!n) return null;
-    const nn = new Node(n.value); nn.id = n.id; nn.height = n.height;
+    const nn = new Node(n.value); nn.id = n.id; nn.height = n.height; nn.color = n.color;
     nn.left = cloneTree(n.left); nn.right = cloneTree(n.right);
     return nn;
   };
@@ -636,6 +669,98 @@ function App() {
           tm.root = await splay(tm.root, val, tm, (nn) => tm.root = nn);
         }
         setRoot(cloneTree(tm.root));
+      } else if (view === 'rb') {
+        const tm = { root: cloneTree(root) };
+        const rotateRightRB = async (y, sharedTm, setLocal) => {
+          let x = y.left; if (!x) return y;
+          let T2 = x.right; x.right = y; y.left = T2;
+          if (setLocal) setLocal(x); else if (sharedTm.root === y) sharedTm.root = x;
+          setRoot(cloneTree(sharedTm.root)); await delay(800);
+          return x;
+        };
+        const rotateLeftRB = async (x, sharedTm, setLocal) => {
+          let y = x.right; if (!y) return x;
+          let T2 = y.left; y.left = x; x.right = T2;
+          if (setLocal) setLocal(y); else if (sharedTm.root === x) sharedTm.root = y;
+          setRoot(cloneTree(sharedTm.root)); await delay(800);
+          return y;
+        };
+        const fixInsert = async (sharedTm, z) => {
+          const getParent = (node) => {
+            const map = new Map();
+            const traverse = (curr, p) => {
+              if (!curr) return;
+              map.set(curr, p);
+              traverse(curr.left, curr); traverse(curr.right, curr);
+            };
+            traverse(sharedTm.root, null);
+            return map.get(node);
+          };
+          while (getParent(z) && getParent(z).color === 'RED') {
+            let p = getParent(z); let g = getParent(p);
+            if (!g) break;
+            if (p === g.left) {
+              let u = g.right;
+              if (u && u.color === 'RED') {
+                addLog("Uncle is RED: Recoloring.", "warning");
+                p.color = 'BLACK'; u.color = 'BLACK'; g.color = 'RED'; z = g;
+                setRoot(cloneTree(sharedTm.root)); await delay(800);
+              } else {
+                if (z === p.right) {
+                  addLog("Uncle is BLACK (Triangle): Left rotation.", "warning");
+                  z = p; g.left = await rotateLeftRB(p, sharedTm, (nn) => g.left = nn); p = g.left;
+                }
+                addLog("Uncle is BLACK (Line): Right rotation + Recoloring.", "warning");
+                p.color = 'BLACK'; g.color = 'RED';
+                const gp = getParent(g);
+                if (!gp) sharedTm.root = await rotateRightRB(g, sharedTm, (nn) => sharedTm.root = nn);
+                else {
+                  if (g === gp.left) gp.left = await rotateRightRB(g, sharedTm, (nn) => gp.left = nn);
+                  else gp.right = await rotateRightRB(g, sharedTm, (nn) => gp.right = nn);
+                }
+                setRoot(cloneTree(sharedTm.root)); await delay(800);
+              }
+            } else {
+              let u = g.left;
+              if (u && u.color === 'RED') {
+                addLog("Uncle is RED: Recoloring.", "warning");
+                p.color = 'BLACK'; u.color = 'BLACK'; g.color = 'RED'; z = g;
+                setRoot(cloneTree(sharedTm.root)); await delay(800);
+              } else {
+                if (z === p.left) {
+                  addLog("Uncle is BLACK (Triangle): Right rotation.", "warning");
+                  z = p; g.right = await rotateRightRB(p, sharedTm, (nn) => g.right = nn); p = g.right;
+                }
+                addLog("Uncle is BLACK (Line): Left rotation + Recoloring.", "warning");
+                p.color = 'BLACK'; g.color = 'RED';
+                const gp = getParent(g);
+                if (!gp) sharedTm.root = await rotateLeftRB(g, sharedTm, (nn) => sharedTm.root = nn);
+                else {
+                  if (g === gp.left) gp.left = await rotateLeftRB(g, sharedTm, (nn) => gp.left = nn);
+                  else gp.right = await rotateLeftRB(g, sharedTm, (nn) => gp.right = nn);
+                }
+                setRoot(cloneTree(sharedTm.root)); await delay(800);
+              }
+            }
+          }
+          sharedTm.root.color = 'BLACK'; setRoot(cloneTree(sharedTm.root));
+        };
+        const ins = async (n, v) => {
+          let curr = n; let pNode = null;
+          while (curr) {
+            pNode = curr; await slowVisit(curr.id, 'searching', `Locating...`);
+            if (v < curr.value) curr = curr.left; else if (v > curr.value) curr = curr.right; else return n;
+          }
+          const newNode = new Node(v); newNode.color = 'RED'; lastId.current = newNode.id;
+          if (!pNode) return newNode;
+          if (v < pNode.value) pNode.left = newNode; else pNode.right = newNode;
+          setRoot(cloneTree(tm.root)); await delay(800);
+          addLog("Checking RB violations...", "warning"); await fixInsert(tm, newNode);
+          return tm.root;
+        };
+        tm.root = await ins(tm.root, val);
+        if (tm.root) tm.root.color = 'BLACK';
+        setRoot(cloneTree(tm.root));
       } else {
         if (!root) setRoot(new Node(val));
         else {
@@ -684,6 +809,152 @@ function App() {
           setRoot(cloneTree(tm.root));
           addLog(`SUCCESS: Removed ${val}.`, 'success');
         } else addLog(`ERROR: ${val} not found.`, 'warning');
+      } else if (view === 'rb') {
+        const tm = { root: cloneTree(root) };
+        if (!tm.root) return;
+
+        const getParent = (sharedTm, node) => {
+          const map = new Map();
+          const traverse = (curr, p) => {
+            if (!curr) return;
+            map.set(curr, p); traverse(curr.left, curr); traverse(curr.right, curr);
+          };
+          traverse(sharedTm.root, null);
+          return map.get(node);
+        };
+
+        const rotateRightRB = async (y, sharedTm, setLocal) => {
+          let x = y.left; if (!x) return y;
+          let T2 = x.right; x.right = y; y.left = T2;
+          if (setLocal) setLocal(x); else if (sharedTm.root === y) sharedTm.root = x;
+          setRoot(cloneTree(sharedTm.root)); await delay(800);
+          return x;
+        };
+
+        const rotateLeftRB = async (x, sharedTm, setLocal) => {
+          let y = x.right; if (!y) return x;
+          let T2 = y.left; y.left = x; x.right = T2;
+          if (setLocal) setLocal(y); else if (sharedTm.root === x) sharedTm.root = y;
+          setRoot(cloneTree(sharedTm.root)); await delay(800);
+          return y;
+        };
+
+        const fixDelete = async (sharedTm, x, xParent) => {
+          while (x !== sharedTm.root && (!x || x.color === 'BLACK')) {
+            if (x === xParent.left) {
+              let s = xParent.right;
+              if (s && s.color === 'RED') {
+                s.color = 'BLACK'; xParent.color = 'RED';
+                const gp = getParent(sharedTm, xParent);
+                if (!gp) sharedTm.root = await rotateLeftRB(xParent, sharedTm, (nn) => sharedTm.root = nn);
+                else {
+                  if (xParent === gp.left) gp.left = await rotateLeftRB(xParent, sharedTm, (nn) => gp.left = nn);
+                  else gp.right = await rotateLeftRB(xParent, sharedTm, (nn) => gp.right = nn);
+                }
+                s = xParent.right;
+              }
+              if ((!s.left || s.left.color === 'BLACK') && (!s.right || s.right.color === 'BLACK')) {
+                s.color = 'RED'; x = xParent; xParent = getParent(sharedTm, x);
+              } else {
+                if (!s.right || s.right.color === 'BLACK') {
+                  if (s.left) s.left.color = 'BLACK';
+                  s.color = 'RED';
+                  xParent.right = await rotateRightRB(s, sharedTm, (nn) => xParent.right = nn);
+                  s = xParent.right;
+                }
+                s.color = xParent.color; xParent.color = 'BLACK';
+                if (s.right) s.right.color = 'BLACK';
+                const gp = getParent(sharedTm, xParent);
+                if (!gp) sharedTm.root = await rotateLeftRB(xParent, sharedTm, (nn) => sharedTm.root = nn);
+                else {
+                  if (xParent === gp.left) gp.left = await rotateLeftRB(xParent, sharedTm, (nn) => gp.left = nn);
+                  else gp.right = await rotateLeftRB(xParent, sharedTm, (nn) => gp.right = nn);
+                }
+                x = sharedTm.root;
+              }
+            } else {
+              let s = xParent.left;
+              if (s && s.color === 'RED') {
+                s.color = 'BLACK'; xParent.color = 'RED';
+                const gp = getParent(sharedTm, xParent);
+                if (!gp) sharedTm.root = await rotateRightRB(xParent, sharedTm, (nn) => sharedTm.root = nn);
+                else {
+                  if (xParent === gp.left) gp.left = await rotateRightRB(xParent, sharedTm, (nn) => gp.left = nn);
+                  else gp.right = await rotateRightRB(xParent, sharedTm, (nn) => gp.right = nn);
+                }
+                s = xParent.left;
+              }
+              if ((!s.right || s.right.color === 'BLACK') && (!s.left || s.left.color === 'BLACK')) {
+                s.color = 'RED'; x = xParent; xParent = getParent(sharedTm, x);
+              } else {
+                if (!s.left || s.left.color === 'BLACK') {
+                  if (s.right) s.right.color = 'BLACK';
+                  s.color = 'RED';
+                  xParent.left = await rotateLeftRB(s, sharedTm, (nn) => xParent.left = nn);
+                  s = xParent.left;
+                }
+                s.color = xParent.color; xParent.color = 'BLACK';
+                if (s.left) s.left.color = 'BLACK';
+                const gp = getParent(sharedTm, xParent);
+                if (!gp) sharedTm.root = await rotateRightRB(xParent, sharedTm, (nn) => sharedTm.root = nn);
+                else {
+                  if (xParent === gp.left) gp.left = await rotateRightRB(xParent, sharedTm, (nn) => gp.left = nn);
+                  else gp.right = await rotateRightRB(xParent, sharedTm, (nn) => gp.right = nn);
+                }
+                x = sharedTm.root;
+              }
+            }
+          }
+          if (x) x.color = 'BLACK';
+          setRoot(cloneTree(sharedTm.root));
+        };
+
+        const del = async (sharedTm, v) => {
+          let curr = sharedTm.root;
+          while (curr && curr.value !== v) {
+            await slowVisit(curr.id, 'searching', `Searching...`);
+            curr = v < curr.value ? curr.left : curr.right;
+          }
+          if (!curr) return;
+          updateHighlight(curr.id, 'deleting'); await delay(1000);
+
+          let y = curr; let yOriginalColor = y.color;
+          let x, xParent;
+          if (!curr.left) {
+            x = curr.right;
+            xParent = getParent(sharedTm, curr);
+            const p = xParent;
+            if (!p) sharedTm.root = x;
+            else if (curr === p.left) p.left = x; else p.right = x;
+          } else if (!curr.right) {
+            x = curr.left;
+            xParent = getParent(sharedTm, curr);
+            const p = xParent;
+            if (!p) sharedTm.root = x;
+            else if (curr === p.left) p.left = x; else p.right = x;
+          } else {
+            y = curr.right; while (y.left) y = y.left;
+            yOriginalColor = y.color;
+            x = y.right;
+            if (getParent(sharedTm, y) === curr) xParent = y;
+            else {
+              const yp = getParent(sharedTm, y);
+              xParent = yp;
+              yp.left = x;
+              y.right = curr.right;
+            }
+            const cp = getParent(sharedTm, curr);
+            if (!cp) sharedTm.root = y;
+            else if (curr === cp.left) cp.left = y; else cp.right = y;
+            y.left = curr.left; y.color = curr.color;
+          }
+          setRoot(cloneTree(sharedTm.root)); await delay(800);
+          if (yOriginalColor === 'BLACK') {
+            addLog("Deleted node was BLACK: Fixing RB violations.", "warning");
+            await fixDelete(sharedTm, x, xParent);
+          }
+        };
+        await del(tm, val);
       } else {
         const tm = { root: cloneTree(root) };
         const del = async (n, v) => {
@@ -747,7 +1018,7 @@ function App() {
   };
 
   const handleTraversal = async (t) => {
-    setIsProcessing(true); setTraversalResult([]); const seq = [];
+    setIsProcessing(true); setTraversalResult([]); setTraversalType(t); const seq = [];
     try {
       const tr = async (n) => {
         if (!n) return;
@@ -772,7 +1043,7 @@ function App() {
       if (!n) return;
       const y = (d + 1) * LAYER_HEIGHT + 20;
       const hl = getHeight(n.left); const hr = getHeight(n.right);
-      p.push({ id: n.id, value: n.value, depth: d, hl, hr, bf: hl - hr, x, y, highlight: highlights[n.id] || 'default' });
+      p.push({ id: n.id, value: n.value, depth: d, hl, hr, bf: hl - hr, x, y, color: n.color, highlight: highlights[n.id] || 'default' });
       const nY = (d + 2) * LAYER_HEIGHT + 20;
       const currentGap = Math.max(w / 4, MIN_GAP / 2);
       if (n.left) { c.push({ id: `l-${n.left.id}`, x1: x, y1: y, x2: x - currentGap, y2: nY, isNew: highlights[n.left.id] === 'inserting' }); calc(n.left, x - currentGap, d + 1, currentGap * 2); }
@@ -789,14 +1060,14 @@ function App() {
           view={view} onHome={() => { setView('welcome'); setRoot(null); setLogs([]); setTraversalResult([]); }} 
           root={root} highlights={highlights} inputValue={inputValue} setInputValue={setInputValue} 
           handleInsert={handleInsert} handleDelete={handleDelete} handleSearch={handleSearch} 
-          handleReset={() => { setRoot(null); setLogs([]); setTraversalResult([]); resetHighlights(); }} 
+          handleReset={() => { setRoot(null); setLogs([]); setTraversalResult([]); setTraversalType(''); resetHighlights(); }} 
           handleTraversal={handleTraversal} generateRandomTree={generateRandomTree} 
-          logs={logs} traversalResult={traversalResult} positions={positions} 
+          logs={logs} traversalResult={traversalResult} traversalType={traversalType} positions={positions} 
           connections={connections} onShowCode={() => setShowCode(true)} 
           isProcessing={isProcessing} showLegend={showLegend} setShowLegend={setShowLegend} 
           canvasRef={canvasRef} scrollRef={scrollRef} canvasSize={canvasSize} 
         />}
-      {showCode && <CodeViewer onClose={() => setShowCode(false)} code={view === 'avl' ? AVL_CODE_SNIPPET : view === 'splay' ? SPLAY_CODE_SNIPPET : BST_CODE_SNIPPET} title={view.toUpperCase()} />}
+      {showCode && <CodeViewer onClose={() => setShowCode(false)} code={view === 'avl' ? AVL_CODE_SNIPPET : view === 'splay' ? SPLAY_CODE_SNIPPET : view === 'rb' ? RB_CODE_SNIPPET : BST_CODE_SNIPPET} title={view.toUpperCase()} />}
     </div>
   );
 }
