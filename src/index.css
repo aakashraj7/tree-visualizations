@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0a0b10;
-  --bg-secondary: #161821;
+  --bg-primary: #05060a;
+  --bg-secondary: #0c0d15;
   --accent: #6366f1;
   --accent-glow: rgba(99, 102, 241, 0.3);
-  --text-main: #e2e8f0;
-  --text-dim: #94a3b8;
-  --node-default: #334155;
-  --node-searching: #eab308;
-  --node-target: #ef4444;
-  --node-successor: #22c55e;
-  --node-visited: #3b82f6;
+  --text-main: #f8fafc;
+  --text-dim: #64748b;
+  --node-default: #1e293b;
+  --node-searching: #fbbf24;
+  --node-target: #f87171;
+  --node-successor: #34d399;
+  --node-visited: #818cf8;
 }
 
 body {
@@ -20,11 +20,28 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-main);
   overflow: hidden;
+  height: 100vh;
+}
+
+/* Background Animation */
+.lab-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.05) 0%, transparent 40%);
+  animation: bgShift 20s ease-in-out infinite alternate;
+}
+
+@keyframes bgShift {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1) translate(2%, 2%); }
 }
 
 /* Custom scrollbar for the logger */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -32,80 +49,82 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Glassmorphism effects */
 .glass {
-  background: rgba(22, 24, 33, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
 }
 
 .glass-accent {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(99, 102, 241, 0.05);
   border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.1);
 }
 
 /* Utilities */
 @layer utilities {
-  /* Animations */
   .node-transition {
-    transition: all 1.2s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .line-transition {
-    transition: all 1.2s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     stroke-dasharray: 1000;
     stroke-dashoffset: 0;
   }
 
   .line-draw {
     stroke-dashoffset: 1000;
-    animation: draw 1.5s forwards;
+    animation: draw 1s forwards cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @keyframes draw {
-    to {
-      stroke-dashoffset: 0;
-    }
+    to { stroke-dashoffset: 0; }
   }
 
   .fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
+    animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
+  .scale-in {
+    animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
   .pulse-red {
-    animation: pulseRed 2s infinite;
+    animation: pulseRed 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
   }
 
   @keyframes pulseRed {
-    0% { filter: drop-shadow(0 0 2px rgba(248, 113, 113, 0.5)); }
-    50% { filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.8)); }
-    100% { filter: drop-shadow(0 0 2px rgba(248, 113, 113, 0.5)); }
+    0%, 100% { filter: drop-shadow(0 0 2px rgba(248, 113, 113, 0.3)); }
+    50% { filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.6)); }
   }
 
   .pulse-purple {
-    animation: pulsePurple 2s infinite;
+    animation: pulsePurple 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
   }
 
   @keyframes pulsePurple {
-    0% { filter: drop-shadow(0 0 2px rgba(168, 85, 247, 0.5)); }
-    50% { filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.8)); }
-    100% { filter: drop-shadow(0 0 2px rgba(168, 85, 247, 0.5)); }
-  }
-
-  .decoration-delay-2000 {
-    animation-delay: 2s;
+    0%, 100% { filter: drop-shadow(0 0 2px rgba(168, 85, 247, 0.3)); }
+    50% { filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.6)); }
   }
 }
