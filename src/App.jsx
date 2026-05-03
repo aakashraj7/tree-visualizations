@@ -737,58 +737,61 @@ function App() {
         if (!root) {
           tm.root.keys = [val];
           tm.root.isLeaf = true;
+          addLog(`Inserted ${val} into new root capsule.`, 'success');
         } else {
-          const splitChild = async (x, i, y) => {
-            const z = new Node(null);
-            z.isLeaf = y.isLeaf;
-            const midIdx = Math.floor(y.keys.length / 2);
-            const midKey = y.keys[midIdx];
-            
-            const rightKeys = y.keys.splice(midIdx + 1);
-            const leftKeys = y.keys.splice(0, midIdx);
-            y.keys = [midKey]; // Temporarily hold midKey to push up
-            
-            z.keys = rightKeys;
-            const promotedKey = y.keys.pop();
-            y.keys = leftKeys;
-
-            if (!y.isLeaf) z.children = y.children.splice(midIdx + 1);
-            
-            x.children.splice(i + 1, 0, z);
-            x.keys.splice(i, 0, promotedKey);
-            
-            addLog(`Splitting node: pushing ${promotedKey} up to parent.`, 'warning');
-            setRoot(cloneTree(tm.root)); await delay(1000);
-          };
-
-          const insertNonFull = async (x, k) => {
-            let i = x.keys.length - 1;
-            if (x.isLeaf) {
-              x.keys.push(null);
-              while (i >= 0 && x.keys[i] > k) { x.keys[i + 1] = x.keys[i]; i--; }
-              x.keys[i + 1] = k;
-              addLog(`Inserted ${k} into leaf node.`, 'success');
-              setRoot(cloneTree(tm.root)); await delay(800);
-            } else {
-              while (i >= 0 && x.keys[i] > k) i--;
-              i++;
-              await slowVisit(x.id, 'searching', `Descending to child at index ${i}...`);
-              if (x.children[i].keys.length === T_MAX_KEYS) {
-                await splitChild(x, i, x.children[i]);
-                if (k > x.keys[i]) i++;
-              }
-              await insertNonFull(x.children[i], k);
-            }
-          };
-
-          if (tm.root.keys.length === T_MAX_KEYS) {
-            const s = new Node(null);
-            s.isLeaf = false;
-            s.children = [tm.root];
-            await splitChild(s, 0, tm.root);
-            tm.root = s;
+          // Bottom-Up Insertion Strategy
+          const path = [];
+          let curr = tm.root;
+          while (!curr.isLeaf) {
+            path.push(curr);
+            let i = 0;
+            while (i < curr.keys.length && val > curr.keys[i]) i++;
+            await slowVisit(curr.id, 'searching', `Descending to child index ${i}...`);
+            curr = curr.children[i];
           }
-          await insertNonFull(tm.root, val);
+
+          let i = 0;
+          while (i < curr.keys.length && val > curr.keys[i]) i++;
+          curr.keys.splice(i, 0, val);
+          addLog(`Inserted ${val} into leaf capsule.`, 'info');
+          setRoot(cloneTree(tm.root));
+          await delay(1000);
+
+          let nodeToSplit = curr;
+          while (nodeToSplit && nodeToSplit.keys.length > T_MAX_KEYS) {
+            const midIdx = Math.floor(nodeToSplit.keys.length / 2);
+            const promotedKey = nodeToSplit.keys[midIdx];
+            const rightKeys = nodeToSplit.keys.slice(midIdx + 1);
+            const leftKeys = nodeToSplit.keys.slice(0, midIdx);
+
+            const newNode = new Node(null);
+            newNode.isLeaf = nodeToSplit.isLeaf;
+            newNode.keys = rightKeys;
+            if (!nodeToSplit.isLeaf) {
+              newNode.children = nodeToSplit.children.splice(midIdx + 1);
+            }
+            nodeToSplit.keys = leftKeys;
+
+            const parent = path.pop();
+            if (!parent) {
+              const newRoot = new Node(null);
+              newRoot.isLeaf = false;
+              newRoot.keys = [promotedKey];
+              newRoot.children = [nodeToSplit, newNode];
+              tm.root = newRoot;
+              addLog(`Root overflow! Split promoted ${promotedKey} to new height.`, 'warning');
+              nodeToSplit = null;
+            } else {
+              let pIdx = 0;
+              while (pIdx < parent.keys.length && promotedKey > parent.keys[pIdx]) pIdx++;
+              parent.keys.splice(pIdx, 0, promotedKey);
+              parent.children.splice(pIdx + 1, 0, newNode);
+              addLog(`Node overflow! Pushing ${promotedKey} up.`, 'warning');
+              nodeToSplit = parent;
+            }
+            setRoot(cloneTree(tm.root));
+            await delay(1000);
+          }
         }
         setRoot(cloneTree(tm.root));
       } else {
