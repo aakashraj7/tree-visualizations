@@ -48,146 +48,6 @@ const COLORS = {
   rbBlack: '#0f172a',
 };
 
-const BST_CODE_SNIPPET = `#include <iostream>
-using namespace std;
-
-struct Node {
-    int key; Node *left, *right;
-};
-
-Node* newNode(int item) {
-    Node* temp = new Node();
-    temp->key = item; temp->left = temp->right = NULL;
-    return temp;
-}
-
-Node* insert(Node* node, int key) {
-    if (node == NULL) return newNode(key);
-    if (key < node->key) node->left = insert(node->left, key);
-    else if (key > node->key) node->right = insert(node->right, key);
-    return node;
-}
-
-Node* deleteNode(Node* root, int key) {
-    if (root == NULL) return root;
-    if (key < root->key) root->left = deleteNode(root->left, key);
-    else if (key > root->key) root->right = deleteNode(root->right, key);
-    else {
-        if (root->left == NULL) {
-            Node* temp = root->right; delete root; return temp;
-        } else if (root->right == NULL) {
-            Node* temp = root->left; delete root; return temp;
-        }
-        Node* temp = root->right;
-        while (temp && temp->left != NULL) temp = temp->left;
-        root->key = temp->key;
-        root->right = deleteNode(root->right, temp->key);
-    }
-    return root;
-}`;
-
-const AVL_CODE_SNIPPET = `#include <iostream>
-#include <algorithm>
-using namespace std;
-
-struct Node {
-    int key; Node *left, *right; int height;
-};
-
-int height(Node *N) { return (N == NULL) ? 0 : N->height; }
-
-Node* rightRotate(Node *y) {
-    Node *x = y->left; Node *T2 = x->right;
-    x->right = y; y->left = T2;
-    y->height = max(height(y->left), height(y->right)) + 1;
-    x->height = max(height(x->left), height(x->right)) + 1;
-    return x;
-}
-
-Node *leftRotate(Node *x) {
-    Node *y = x->right; Node *T2 = y->left;
-    y->left = x; x->right = T2;
-    x->height = max(height(x->left), height(x->right)) + 1;
-    y->height = max(height(y->left), height(y->right)) + 1;
-    return y;
-}
-
-Node* insert(Node* node, int key) {
-    if (node == NULL) return (new Node(key));
-    if (key < node->key) node->left = insert(node->left, key);
-    else if (key > node->key) node->right = insert(node->right, key);
-    else return node;
-
-    node->height = 1 + max(height(node->left), height(node->right));
-    int b = height(node->left) - height(node->right);
-
-    if (b > 1 && key < node->left->key) return rightRotate(node);
-    if (b < -1 && key > node->right->key) return leftRotate(node);
-    if (b > 1 && key > node->left->key) {
-        node->left = leftRotate(node->left); return rightRotate(node);
-    }
-    if (b < -1 && key < node->right->key) {
-        node->right = rightRotate(node->right); return leftRotate(node);
-    }
-    return node;
-}`;
-
-const SPLAY_CODE_SNIPPET = `#include <iostream>
-using namespace std;
-
-struct Node {
-    int key; Node *left, *right;
-};
-
-Node* rightRotate(Node* x) {
-    Node* y = x->left; x->left = y->right; y->right = x;
-    return y;
-}
-
-Node* leftRotate(Node* x) {
-    Node* y = x->right; x->right = y->left; y->left = x;
-    return y;
-}
-
-Node* splay(Node* root, int key) {
-    if (root == NULL || root->key == key) return root;
-    if (root->key > key) {
-        if (root->left == NULL) return root;
-        if (root->left->key > key) {
-            root->left->left = splay(root->left->left, key);
-            root = rightRotate(root);
-        } else if (root->left->key < key) {
-            root->left->right = splay(root->left->right, key);
-            if (root->left->right != NULL) root->left = leftRotate(root->left);
-        }
-        return (root->left == NULL) ? root : rightRotate(root);
-    } else {
-        if (root->right == NULL) return root;
-        if (root->right->key > key) {
-            root->right->left = splay(root->right->left, key);
-            if (root->right->left != NULL) root->right = rightRotate(root->right);
-        } else if (root->right->key < key) {
-            root->right->right = splay(root->right->right, key);
-            root = leftRotate(root);
-        }
-        return (root->right == NULL) ? root : leftRotate(root);
-    }
-}`;
-
-const RB_CODE_SNIPPET = `#include <iostream>
-using namespace std;
-
-enum Color { RED, BLACK };
-
-struct Node {
-    int data; bool color;
-    Node *left, *right, *parent;
-    Node(int data) : data(data) {
-       left = right = parent = NULL;
-       color = RED;
-    }
-};`;
-
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 class Node {
@@ -242,33 +102,11 @@ const WelcomeScreen = ({ onSelect }) => (
   </div>
 );
 
-const CodeViewer = ({ onClose, code, title }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-12 bg-black/85 backdrop-blur-2xl fade-in overflow-hidden">
-    <div className="w-full max-w-6xl h-[85vh] glass rounded-[3.5rem] border border-white/10 shadow-[0_0_120px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col scale-in relative">
-      <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-        <div className="flex items-center gap-6">
-          <div className="p-4 bg-indigo-500/10 rounded-[1.5rem] text-indigo-400 border border-indigo-500/20 shadow-inner"><Code size={28} /></div>
-          <div>
-            <h2 className="text-2xl font-black text-white tracking-tighter uppercase">{title} <span className="text-slate-600">Archway</span></h2>
-            <p className="text-[11px] text-indigo-500/60 font-black uppercase tracking-[0.5em]">Recursive implementation logic</p>
-          </div>
-        </div>
-        <button onClick={onClose} className="p-3 hover:bg-white/10 rounded-[1.25rem] text-slate-500 hover:text-white transition-all"><X size={32} /></button>
-      </div>
-      <div className="flex-1 bg-[#1e1e1e] p-2">
-        <div className="h-full rounded-[2.5rem] overflow-hidden border border-white/5 shadow-inner">
-          <Editor height="100%" defaultLanguage="cpp" theme="vs-dark" value={code} options={{ readOnly: true, fontSize: 17, minimap: { enabled: false }, automaticLayout: true, fontFamily: '"JetBrains Mono", monospace' }} />
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 const Dashboard = ({ 
   view, onHome, root, highlights, inputValue, setInputValue,
   handleInsert, handleDelete, handleReset, handleTraversal, handleSearch, generateRandomTree,
   isProcessing, showLegend, setShowLegend, canvasRef, scrollRef, canvasSize,
-  logs, traversalResult, traversalType, positions, connections, onShowCode
+  logs, traversalResult, traversalType, positions, connections
 }) => (
   <div className="flex flex-col h-full overflow-hidden bg-[#05060a]">
     <header className="h-20 glass border-b border-white/5 flex items-center px-10 justify-between z-20 shadow-2xl relative">
@@ -322,9 +160,6 @@ const Dashboard = ({
         <div className="flex gap-3">
           <button onClick={() => generateRandomTree()} disabled={isProcessing} className="p-4 bg-amber-500/10 text-amber-500/60 hover:text-amber-400 hover:bg-amber-500/20 rounded-2xl border border-amber-500/10 transition-all shadow-xl disabled:opacity-50" title="Random Architecture"><RefreshCw size={20} /></button>
           <button onClick={handleReset} disabled={isProcessing} className="p-4 bg-slate-800/40 text-slate-600 hover:text-white rounded-2xl border border-white/5 transition-all shadow-xl disabled:opacity-50" title="Clear Canvas"><Trash2 size={20} /></button>
-          {view !== 'bt' && (
-            <button onClick={onShowCode} className="px-6 py-3 bg-indigo-500/5 hover:bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-3 transition-all shadow-xl"><Code size={20} /> View Logic</button>
-          )}
         </div>
 
         <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-xl border border-white/5 shadow-inner backdrop-blur-sm">
@@ -486,7 +321,6 @@ function App() {
   const [traversalResult, setTraversalResult] = useState([]);
   const [traversalType, setTraversalType] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showCode, setShowCode] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 1400, height: 900 });
   const [showLegend, setShowLegend] = useState(true);
 
@@ -565,11 +399,12 @@ function App() {
       });
     } else {
       vals.sort((a,b) => a-b);
-      const build = (l, r) => {
+      const build = (l, r, d = 0) => {
         if (l > r) return null;
         const m = Math.floor((l+r)/2);
         const n = new Node(vals[m]);
-        n.left = build(l, m-1); n.right = build(m+1, r);
+        if (mode === 'rb') n.color = (d % 2 === 0) ? 'BLACK' : 'RED';
+        n.left = build(l, m-1, d + 1); n.right = build(m+1, r, d + 1);
         n.height = 1 + Math.max(getHeight(n.left), getHeight(n.right));
         return n;
       };
@@ -1063,11 +898,10 @@ function App() {
           handleReset={() => { setRoot(null); setLogs([]); setTraversalResult([]); setTraversalType(''); resetHighlights(); }} 
           handleTraversal={handleTraversal} generateRandomTree={generateRandomTree} 
           logs={logs} traversalResult={traversalResult} traversalType={traversalType} positions={positions} 
-          connections={connections} onShowCode={() => setShowCode(true)} 
+          connections={connections} 
           isProcessing={isProcessing} showLegend={showLegend} setShowLegend={setShowLegend} 
           canvasRef={canvasRef} scrollRef={scrollRef} canvasSize={canvasSize} 
         />}
-      {showCode && <CodeViewer onClose={() => setShowCode(false)} code={view === 'avl' ? AVL_CODE_SNIPPET : view === 'splay' ? SPLAY_CODE_SNIPPET : view === 'rb' ? RB_CODE_SNIPPET : BST_CODE_SNIPPET} title={view.toUpperCase()} />}
     </div>
   );
 }
