@@ -62,10 +62,11 @@ class Node {
     this.keys = value !== null ? [value] : []; // For B-Tree nodes
     this.children = []; // For B-Tree nodes
     this.isLeaf = true; // For B-Tree nodes
+    this.next = null; // For B+ Tree leaf nodes
   }
 }
 
-const RulesModal = ({ onClose, order }) => {
+const RulesModal = ({ onClose, order, view }) => {
   const maxKeys = order - 1;
   const minKeys = Math.ceil(order / 2) - 1;
   const maxChildren = order;
@@ -81,7 +82,7 @@ const RulesModal = ({ onClose, order }) => {
           <div className="flex items-center gap-6">
             <div className="p-4 bg-cyan-500/10 rounded-[1.5rem] text-cyan-400 border border-cyan-500/20 shadow-inner"><Database size={28} /></div>
             <div>
-              <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none mb-1">B-Tree Rules <span className="text-slate-600">Order {order}</span></h2>
+              <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">{view === 'b-plus-tree' ? 'B+ Tree' : 'B-Tree'} Rules <span className="text-slate-600">Order {order}</span></h2>
               <p className="text-[12px] text-cyan-500/60 font-black uppercase tracking-[0.5em]">Structural constraints atlas</p>
             </div>
           </div>
@@ -114,11 +115,11 @@ const RulesModal = ({ onClose, order }) => {
   );
 };
 
-const OrderSelectionModal = ({ onSelect, onClose }) => (
+const OrderSelectionModal = ({ onSelect, onClose, view }) => (
   <div className="fixed inset-0 z-[60] flex items-center justify-center p-12 bg-black/85 backdrop-blur-2xl fade-in overflow-hidden">
     <div className="w-full max-w-4xl glass rounded-[3.5rem] border border-white/10 shadow-2xl p-16 relative overflow-hidden scale-in text-center space-y-12">
       <div className="space-y-4">
-        <h2 className="text-5xl font-black text-white tracking-tighter uppercase leading-none">Initialize <span className="text-cyan-500">B-Tree</span> Architecture</h2>
+        <h2 className="text-5xl font-black text-white tracking-tighter uppercase leading-none">Initialize <span className={view === 'b-plus-tree' ? 'text-emerald-500' : 'text-cyan-500'}>{view === 'b-plus-tree' ? 'B+ Tree' : 'B-Tree'}</span> Architecture</h2>
         <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.5em] opacity-60">Select the branching factor (Order) for the laboratory session</p>
       </div>
 
@@ -158,7 +159,8 @@ const WelcomeScreen = ({ onSelect }) => (
           { id: 'avl', title: 'AVL Tree', icon: <RefreshCw size={28} />, color: 'bg-fuchsia-600', shadow: 'shadow-fuchsia-900/40', desc: 'Experience structural stability through rotations.' },
           { id: 'splay', title: 'Splay Tree', icon: <Zap size={28} />, color: 'bg-amber-600', shadow: 'shadow-amber-900/40', desc: 'Self-adjusting search tree for frequent access.' },
           { id: 'rb', title: 'Red-Black Tree', icon: <ShieldCheck size={28} />, color: 'bg-rose-600', shadow: 'shadow-rose-900/40', desc: 'Highly balanced tree with efficient recoloring.' },
-          { id: 'b-tree', title: 'B-Tree', icon: <Database size={28} />, color: 'bg-cyan-600', shadow: 'shadow-cyan-900/40', desc: 'Multi-key search tree for large-scale data systems.' }
+          { id: 'b-tree', title: 'B-Tree', icon: <Database size={28} />, color: 'bg-cyan-600', shadow: 'shadow-cyan-900/40', desc: 'Multi-key search tree for large-scale data systems.' },
+          { id: 'b-plus-tree', title: 'B+ Tree', icon: <LayoutGrid size={28} />, color: 'bg-emerald-600', shadow: 'shadow-emerald-900/40', desc: 'Advanced B-Tree with leaf links for efficient range scanning.' }
         ].map((opt) => (
           <button key={opt.id} onClick={() => onSelect(opt.id)} className="group glass w-full p-8 rounded-[2.5rem] border border-white/5 hover:border-indigo-500/30 transition-all hover:scale-105 text-left flex flex-col gap-6 relative overflow-hidden shadow-2xl min-h-[320px]">
             <div className={`p-5 rounded-[2rem] ${opt.color} ${opt.shadow} text-white transition-all group-hover:scale-110 group-hover:rotate-6 w-fit shadow-2xl`}>{opt.icon}</div>
@@ -196,13 +198,14 @@ const Dashboard = ({
             view === 'avl' ? 'bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20' :
             view === 'splay' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
             view === 'b-tree' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
+            view === 'b-plus-tree' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
             'bg-rose-500/10 text-rose-400 border border-rose-500/20'
           }`}>
-            {view === 'bt' ? <Network size={22} /> : view === 'bst' ? <GitBranch size={22} /> : view === 'avl' ? <RefreshCw size={22} /> : view === 'splay' ? <Zap size={22} /> : view === 'b-tree' ? <Database size={22} /> : <ShieldCheck size={22} />}
+            {view === 'bt' ? <Network size={22} /> : view === 'bst' ? <GitBranch size={22} /> : view === 'avl' ? <RefreshCw size={22} /> : view === 'splay' ? <Zap size={22} /> : view === 'b-tree' ? <Database size={22} /> : view === 'b-plus-tree' ? <LayoutGrid size={22} /> : <ShieldCheck size={22} />}
           </div>
           <div className="space-y-1">
             <h1 className="text-base font-black text-white uppercase tracking-tighter leading-none">
-              {view === 'bt' ? 'Binary Tree' : view === 'bst' ? 'Binary Search Tree' : view === 'avl' ? 'AVL Tree' : view === 'splay' ? 'Splay Tree' : view === 'rb' ? 'Red-Black Tree' : 'B-Tree'} Laboratory
+              {view === 'bt' ? 'Binary Tree' : view === 'bst' ? 'Binary Search Tree' : view === 'avl' ? 'AVL Tree' : view === 'splay' ? 'Splay Tree' : view === 'rb' ? 'Red-Black Tree' : view === 'b-plus-tree' ? 'B+ Tree' : 'B-Tree'} Laboratory
             </h1>
             <div className="flex items-center gap-2">
                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
@@ -233,20 +236,20 @@ const Dashboard = ({
         </div>
 
         <div className="flex gap-3">
-          {view === 'b-tree' && (
-            <button onClick={() => setShowRules(true)} className="px-6 py-4 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-2xl border border-indigo-500/10 transition-all shadow-xl flex items-center gap-3" title="B-Tree Rules">
+          {(view === 'b-tree' || view === 'b-plus-tree') && (
+            <button onClick={() => setShowRules(true)} className="px-6 py-4 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-2xl border border-indigo-500/10 transition-all shadow-xl flex items-center gap-3" title="Tree Rules">
               <HelpCircle size={20} />
               <span className="text-[10px] font-black uppercase tracking-widest">View Rules</span>
             </button>
           )}
-          {view !== 'b-tree' && (
+          {(view !== 'b-tree' && view !== 'b-plus-tree') && (
             <button onClick={() => generateRandomTree()} disabled={isProcessing} className="p-4 bg-amber-500/10 text-amber-500/60 hover:text-amber-400 hover:bg-amber-500/20 rounded-2xl border border-amber-500/10 transition-all shadow-xl disabled:opacity-50" title="Random Architecture"><RefreshCw size={20} /></button>
           )}
           <button onClick={handleReset} disabled={isProcessing} className="p-4 bg-slate-800/40 text-slate-600 hover:text-white rounded-2xl border border-white/5 transition-all shadow-xl disabled:opacity-50" title="Clear Canvas"><Trash2 size={20} /></button>
         </div>
 
         <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-xl border border-white/5 shadow-inner backdrop-blur-sm">
-          {view !== 'b-tree' && ['Pre', 'In', 'Post'].map((type) => (
+          {(view !== 'b-tree' && view !== 'b-plus-tree') && ['Pre', 'In', 'Post'].map((type) => (
             <button key={type} onClick={() => handleTraversal(type + '-Order')} disabled={isProcessing} className="px-3.5 py-2 hover:bg-indigo-500/20 hover:text-indigo-400 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-30 transition-all border border-transparent hover:border-indigo-500/30">{type}</button>
           ))}
         </div>
@@ -286,13 +289,18 @@ const Dashboard = ({
                 <feGaussianBlur stdDeviation="6" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
+              </marker>
             </defs>
-            {connections.map(({ isNew, ...c }) => (
+            {connections.map(({ isNew, isLeafLink, ...c }) => (
               <line 
                 key={c.id} {...c} 
-                stroke="#1e293b" 
-                strokeWidth="3" 
-                className={`line-transition opacity-40 ${isNew ? 'line-draw text-indigo-500 stroke-indigo-500' : ''} ${c.isSearching ? 'path-searching' : ''}`} 
+                stroke={isLeafLink ? "#10b981" : "#1e293b"} 
+                strokeWidth={isLeafLink ? "2" : "3"} 
+                strokeDasharray={isLeafLink ? "5,5" : ""}
+                markerEnd={isLeafLink ? "url(#arrowhead)" : ""}
+                className={`line-transition ${isLeafLink ? 'opacity-80' : 'opacity-40'} ${isNew ? 'line-draw text-indigo-500 stroke-indigo-500' : ''} ${c.isSearching ? 'path-searching' : ''}`} 
               />
             ))}
             {positions.map(({ isNew, ...p }) => (
@@ -454,11 +462,12 @@ function App() {
   
   const cloneTree = (n) => {
     if (!n) return null;
-    if (view === 'b-tree') {
+    if (view === 'b-tree' || view === 'b-plus-tree') {
       const nn = new Node(null);
       nn.id = n.id;
       nn.keys = [...n.keys];
       nn.isLeaf = n.isLeaf;
+      nn.next = n.next; // Pointer to next leaf node
       nn.children = n.children.map(c => cloneTree(c));
       return nn;
     }
@@ -794,6 +803,84 @@ function App() {
           }
         }
         setRoot(cloneTree(tm.root));
+      } else if (view === 'b-plus-tree') {
+        const T_MAX_KEYS = bTreeOrder - 1;
+        const tm = { root: cloneTree(root) || new Node(null) };
+        if (!root) tm.root.isLeaf = true;
+
+        const contains = (n, k) => {
+          if (!n) return false;
+          if (n.isLeaf) return n.keys.includes(k);
+          let i = 0; while (i < n.keys.length && k > n.keys[i]) i++;
+          if (i < n.keys.length && k === n.keys[i]) i++;
+          return contains(n.children[i], k);
+        };
+
+        if (root && contains(root, val)) {
+          addLog(`Key ${val} already exists in B+ architecture.`, 'warning');
+          setIsProcessing(false); return;
+        }
+
+        if (!root) {
+          tm.root.keys = [val];
+          addLog(`Inserted ${val} into new B+ root.`, 'success');
+        } else {
+          const path = []; let curr = tm.root;
+          while (!curr.isLeaf) {
+            path.push(curr);
+            let i = 0; while (i < curr.keys.length && val > curr.keys[i]) i++;
+            if (i < curr.keys.length && val === curr.keys[i]) i++; // B+ convention: key k is smallest in right child
+            await slowVisit(curr.id, 'searching', `Descending to child index ${i}...`);
+            curr = curr.children[i];
+          }
+
+          let i = 0; while (i < curr.keys.length && val > curr.keys[i]) i++;
+          curr.keys.splice(i, 0, val);
+          addLog(`Inserted ${val} into leaf.`, 'info');
+          setRoot(cloneTree(tm.root)); await delay(1000);
+
+          let nodeToSplit = curr;
+          while (nodeToSplit && nodeToSplit.keys.length > T_MAX_KEYS) {
+            const isLeaf = nodeToSplit.isLeaf;
+            const midIdx = isLeaf ? Math.ceil(nodeToSplit.keys.length / 2) : Math.floor(nodeToSplit.keys.length / 2);
+            
+            const newNode = new Node(null);
+            newNode.isLeaf = isLeaf;
+            
+            let promotedKey;
+            if (isLeaf) {
+              newNode.keys = nodeToSplit.keys.slice(midIdx);
+              nodeToSplit.keys = nodeToSplit.keys.slice(0, midIdx);
+              promotedKey = newNode.keys[0];
+              newNode.next = nodeToSplit.next;
+              nodeToSplit.next = newNode;
+            } else {
+              promotedKey = nodeToSplit.keys[midIdx];
+              newNode.keys = nodeToSplit.keys.slice(midIdx + 1);
+              nodeToSplit.keys = nodeToSplit.keys.slice(0, midIdx);
+              newNode.children = nodeToSplit.children.splice(midIdx + 1);
+            }
+
+            const parent = path.pop();
+            if (!parent) {
+              const newRoot = new Node(null);
+              newRoot.isLeaf = false;
+              newRoot.keys = [promotedKey];
+              newRoot.children = [nodeToSplit, newNode];
+              tm.root = newRoot;
+              addLog(`Root split! New height reached.`, 'warning');
+              nodeToSplit = null;
+            } else {
+              let pIdx = 0; while (pIdx < parent.keys.length && promotedKey >= parent.keys[pIdx]) pIdx++;
+              parent.keys.splice(pIdx, 0, promotedKey);
+              parent.children.splice(pIdx + 1, 0, newNode);
+              addLog(`Splitting node, promoting ${promotedKey}.`, 'warning');
+              nodeToSplit = parent;
+            }
+            setRoot(cloneTree(tm.root)); await delay(1000);
+          }
+        }
+        setRoot(cloneTree(tm.root));
       } else {
         if (!root) setRoot(new Node(val));
         else {
@@ -1075,6 +1162,113 @@ function App() {
         await delInternal(tm.root, val);
         if (tm.root.keys.length === 0) tm.root = tm.root.children[0] || null;
         setRoot(cloneTree(tm.root));
+      } else if (view === 'b-plus-tree') {
+        const tm = { root: cloneTree(root) };
+        if (!root) return;
+        const T_MIN = Math.ceil(bTreeOrder / 2);
+
+        const findLeaf = async (n, k, path) => {
+          if (n.isLeaf) return n;
+          path.push(n);
+          let i = 0; while (i < n.keys.length && k > n.keys[i]) i++;
+          if (i < n.keys.length && k === n.keys[i]) i++;
+          await slowVisit(n.id, 'searching', `Searching leaf for ${k}...`);
+          return await findLeaf(n.children[i], k, path);
+        };
+
+        const updateInternalKeys = (sharedTm, oldK, newK) => {
+          const traverse = (n) => {
+            if (!n) return;
+            for (let i = 0; i < n.keys.length; i++) {
+              if (n.keys[i] === oldK) { n.keys[i] = newK; return; }
+            }
+            if (!n.isLeaf) n.children.forEach(traverse);
+          };
+          traverse(sharedTm.root);
+        };
+
+        const path = [];
+        const leaf = await findLeaf(tm.root, val, path);
+        const idx = leaf.keys.indexOf(val);
+        if (idx === -1) {
+          addLog(`Key ${val} not found in B+ Tree.`, 'warning');
+          setIsProcessing(false); return;
+        }
+
+        updateHighlight(leaf.id, 'deleting'); await delay(1000);
+        leaf.keys.splice(idx, 1);
+        if (idx === 0 && leaf.keys.length > 0 && path.length > 0) {
+          updateInternalKeys(tm, val, leaf.keys[0]);
+        }
+        addLog(`Removed ${val} from leaf.`, 'success');
+        setRoot(cloneTree(tm.root)); await delay(1000);
+
+        let node = leaf;
+        while (node !== tm.root && node.keys.length < T_MIN - 1) {
+          const parent = path.pop();
+          const childIdx = parent.children.indexOf(node);
+          const leftSib = childIdx > 0 ? parent.children[childIdx - 1] : null;
+          const rightSib = childIdx < parent.children.length - 1 ? parent.children[childIdx + 1] : null;
+
+          if (leftSib && leftSib.keys.length >= T_MIN) {
+            addLog("Borrowing from left sibling.", "warning");
+            if (node.isLeaf) {
+              const borrowedKey = leftSib.keys.pop();
+              node.keys.unshift(borrowedKey);
+              parent.keys[childIdx - 1] = node.keys[0];
+            } else {
+              node.keys.unshift(parent.keys[childIdx - 1]);
+              parent.keys[childIdx - 1] = leftSib.keys.pop();
+              node.children.unshift(leftSib.children.pop());
+            }
+            node = tm.root; // Done
+          } else if (rightSib && rightSib.keys.length >= T_MIN) {
+            addLog("Borrowing from right sibling.", "warning");
+            if (node.isLeaf) {
+              const borrowedKey = rightSib.keys.shift();
+              node.keys.push(borrowedKey);
+              parent.keys[childIdx] = rightSib.keys[0];
+            } else {
+              node.keys.push(parent.keys[childIdx]);
+              parent.keys[childIdx] = rightSib.keys.shift();
+              node.children.push(rightSib.children.shift());
+            }
+            node = tm.root; // Done
+          } else {
+            // Merge
+            addLog("Merging nodes...", "warning");
+            if (leftSib) {
+              if (node.isLeaf) {
+                leftSib.keys.push(...node.keys);
+                leftSib.next = node.next;
+                parent.keys.splice(childIdx - 1, 1);
+                parent.children.splice(childIdx, 1);
+              } else {
+                leftSib.keys.push(parent.keys[childIdx - 1], ...node.keys);
+                leftSib.children.push(...node.children);
+                parent.keys.splice(childIdx - 1, 1);
+                parent.children.splice(childIdx, 1);
+              }
+              node = parent;
+            } else {
+              if (node.isLeaf) {
+                node.keys.push(...rightSib.keys);
+                node.next = rightSib.next;
+                parent.keys.splice(childIdx, 1);
+                parent.children.splice(childIdx + 1, 1);
+              } else {
+                node.keys.push(parent.keys[childIdx], ...rightSib.keys);
+                node.children.push(...rightSib.children);
+                parent.keys.splice(childIdx, 1);
+                parent.children.splice(childIdx + 1, 1);
+              }
+              node = parent;
+            }
+          }
+          if (tm.root.keys.length === 0 && !tm.root.isLeaf) tm.root = tm.root.children[0];
+          setRoot(cloneTree(tm.root)); await delay(1000);
+        }
+        setRoot(cloneTree(tm.root));
       } else {
         const tm = { root: cloneTree(root) };
         const del = async (n, v) => {
@@ -1119,12 +1313,25 @@ function App() {
     try {
       const s = async (n, v) => {
         if (!n) return null;
-        if (view === 'b-tree') {
+        if (view === 'b-tree' || view === 'b-plus-tree') {
           let i = 0; while (i < n.keys.length && v > n.keys[i]) i++;
-          await slowVisit(n.id, 'searching', `Checking node with keys [${n.keys.join(', ')}]...`);
-          if (i < n.keys.length && n.keys[i] === v) { updateHighlight(n.id, 'processed'); return n; }
-          if (n.isLeaf) return null;
-          return await s(n.children[i], v);
+          if (view === 'b-plus-tree') {
+            // B+ search always descends to leaf
+            await slowVisit(n.id, 'searching', `Checking node with keys [${n.keys.join(', ')}]...`);
+            if (n.isLeaf) {
+              if (n.keys.includes(v)) { updateHighlight(n.id, 'processed'); return n; }
+              return null;
+            }
+            let childIdx = 0; while (childIdx < n.keys.length && v > n.keys[childIdx]) childIdx++;
+            if (childIdx < n.keys.length && v === n.keys[childIdx]) childIdx++;
+            return await s(n.children[childIdx], v);
+          } else {
+            // B-Tree search can stop at internal node
+            await slowVisit(n.id, 'searching', `Checking node with keys [${n.keys.join(', ')}]...`);
+            if (i < n.keys.length && n.keys[i] === v) { updateHighlight(n.id, 'processed'); return n; }
+            if (n.isLeaf) return null;
+            return await s(n.children[i], v);
+          }
         }
         await slowVisit(n.id, 'searching', `Checking ${n.value}...`);
         if (n.value === v) { updateHighlight(n.id, 'processed'); return n; }
@@ -1166,13 +1373,16 @@ function App() {
 
   const { positions, connections } = useMemo(() => {
     const p = []; const c = [];
+    const leaves = [];
     const calc = (n, x, d, w) => {
       if (!n) return;
       const y = (d + 1) * LAYER_HEIGHT + 20;
       
-      if (view === 'b-tree') {
+      if (view === 'b-tree' || view === 'b-plus-tree') {
         const nodeWidth = n.keys.length * 40 + 20;
         p.push({ id: n.id, keys: [...n.keys], depth: d, x, y, isLeaf: n.isLeaf, highlight: highlights[n.id] || 'default', type: 'b-node', width: nodeWidth });
+        if (n.isLeaf) leaves.push({ id: n.id, x, y, width: nodeWidth });
+
         const nY = (d + 2) * LAYER_HEIGHT + 20;
         const numChildren = n.children.length;
         if (numChildren > 0) {
@@ -1201,6 +1411,22 @@ function App() {
       }
     };
     calc(root, canvasSize.width / 2, 0, canvasSize.width * 0.75);
+    
+    // Add horizontal links for B+ Tree leaves
+    if (view === 'b-plus-tree' && leaves.length > 1) {
+      leaves.sort((a, b) => a.x - b.x);
+      for (let i = 0; i < leaves.length - 1; i++) {
+        c.push({
+          id: `leaf-link-${i}`,
+          x1: leaves[i].x + leaves[i].width / 2,
+          y1: leaves[i].y,
+          x2: leaves[i+1].x - leaves[i+1].width / 2,
+          y2: leaves[i+1].y,
+          isLeafLink: true
+        });
+      }
+    }
+
     return { positions: p, connections: c };
   }, [root, highlights, canvasSize.width, view]);
 
@@ -1214,8 +1440,9 @@ function App() {
   };
 
   const onSelectView = (v) => {
-    if (v === 'b-tree') {
+    if (v === 'b-tree' || v === 'b-plus-tree') {
       setShowOrderModal(true);
+      setView(v); // Temporarily set view to get correct modal title if needed
     } else {
       setView(v);
       resetHighlights();
@@ -1228,7 +1455,6 @@ function App() {
   const onSelectBTreeOrder = (order) => {
     setBTreeOrder(order);
     setShowOrderModal(false);
-    setView('b-tree');
     resetHighlights();
     setRoot(null);
     setLogs([]);
@@ -1249,8 +1475,8 @@ function App() {
           positions={positions} connections={connections} setShowRules={setShowRules}
         />
       )}
-      {showOrderModal && <OrderSelectionModal onSelect={onSelectBTreeOrder} onClose={() => setShowOrderModal(false)} />}
-      {showRules && <RulesModal order={bTreeOrder} onClose={() => setShowRules(false)} />}
+      {showOrderModal && <OrderSelectionModal onSelect={onSelectBTreeOrder} onClose={() => setShowOrderModal(false)} view={view} />}
+      {showRules && <RulesModal order={bTreeOrder} onClose={() => setShowRules(false)} view={view} />}
     </div>
   );
 }
