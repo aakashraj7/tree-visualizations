@@ -28,6 +28,7 @@ import Editor from '@monaco-editor/react';
 const NODE_RADIUS = 28;
 const LAYER_HEIGHT = 100;
 const MIN_GAP = 70; 
+const B_TREE_T = 2; // Minimum degree for B-Tree
 
 // Educational Delays
 const SEARCH_DELAY = 1200;
@@ -58,33 +59,106 @@ class Node {
     this.right = null;
     this.height = 1;
     this.color = 'RED'; // Red-Black Tree property
+    this.keys = value !== null ? [value] : []; // For B-Tree nodes
+    this.children = []; // For B-Tree nodes
+    this.isLeaf = true; // For B-Tree nodes
   }
 }
 
-// --- High-Fidelity App Components ---
+const RulesModal = ({ onClose, order }) => {
+  const maxKeys = order - 1;
+  const minKeys = Math.ceil(order / 2) - 1;
+  const maxChildren = order;
+  const minChildren = Math.ceil(order / 2);
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-12 bg-black/85 backdrop-blur-2xl fade-in overflow-hidden">
+      <div className="w-full max-w-2xl glass rounded-[3.5rem] border border-white/10 shadow-2xl p-12 relative overflow-hidden scale-in">
+        <div className="absolute top-0 right-0 p-8">
+           <button onClick={onClose} className="p-3 hover:bg-white/10 rounded-[1.25rem] text-slate-500 hover:text-white transition-all"><X size={32} /></button>
+        </div>
+        <div className="space-y-10">
+          <div className="flex items-center gap-6">
+            <div className="p-4 bg-cyan-500/10 rounded-[1.5rem] text-cyan-400 border border-cyan-500/20 shadow-inner"><Database size={28} /></div>
+            <div>
+              <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none mb-1">B-Tree Rules <span className="text-slate-600">Order {order}</span></h2>
+              <p className="text-[12px] text-cyan-500/60 font-black uppercase tracking-[0.5em]">Structural constraints atlas</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8">
+            <div className="p-10 rounded-[2.5rem] bg-white/5 border border-white/5 space-y-6">
+              <div className="text-xs font-black uppercase tracking-widest text-slate-500">Node Keys</div>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm font-bold text-slate-300"><span>Maximum Keys</span> <span className="text-cyan-400 font-black">{maxKeys}</span></div>
+                <div className="flex justify-between text-sm font-bold text-slate-300"><span>Minimum Keys</span> <span className="text-cyan-400 font-black">{minKeys}</span></div>
+              </div>
+            </div>
+            <div className="p-10 rounded-[2.5rem] bg-white/5 border border-white/5 space-y-6">
+              <div className="text-xs font-black uppercase tracking-widest text-slate-500">Connectivity</div>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm font-bold text-slate-300"><span>Max Children</span> <span className="text-indigo-400 font-black">{maxChildren}</span></div>
+                <div className="flex justify-between text-sm font-bold text-slate-300"><span>Min Children</span> <span className="text-indigo-400 font-black">{minChildren}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-10 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/10 text-sm leading-relaxed text-slate-400 font-bold space-y-4">
+             <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> All leaf nodes must be at the same depth.</p>
+             <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> The root must have at least two children if it is not a leaf node.</p>
+             <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> Every internal node (except root) has at least ⌈{order}/2⌉ children.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const OrderSelectionModal = ({ onSelect, onClose }) => (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center p-12 bg-black/85 backdrop-blur-2xl fade-in overflow-hidden">
+    <div className="w-full max-w-4xl glass rounded-[3.5rem] border border-white/10 shadow-2xl p-16 relative overflow-hidden scale-in text-center space-y-12">
+      <div className="space-y-4">
+        <h2 className="text-5xl font-black text-white tracking-tighter uppercase leading-none">Initialize <span className="text-cyan-500">B-Tree</span> Architecture</h2>
+        <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.5em] opacity-60">Select the branching factor (Order) for the laboratory session</p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-6">
+        {[3, 4, 5, 6].map(order => (
+          <button key={order} onClick={() => onSelect(order)} className="group p-10 rounded-[2.5rem] bg-white/5 border border-white/5 hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-all space-y-4 hover:scale-105">
+            <div className="text-5xl font-black text-slate-700 group-hover:text-cyan-400 transition-colors">{order}</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-cyan-500/60">Order</div>
+          </button>
+        ))}
+      </div>
+      
+      <button onClick={onClose} className="text-slate-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all border border-white/5 px-8 py-4 rounded-2xl hover:bg-white/5">Cancel Session</button>
+    </div>
+  </div>
+);
 
 const WelcomeScreen = ({ onSelect }) => (
-  <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden bg-[#05060a]">
+  <div className="flex-1 flex flex-col items-center justify-start relative overflow-y-auto bg-[#05060a] custom-scrollbar">
     <div className="lab-bg" />
     <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-indigo-600/5 blur-[160px] rounded-full animate-pulse" />
-    <div className="z-10 text-center space-y-12 fade-in max-w-7xl px-8 py-20">
+    <div className="z-10 text-center space-y-8 fade-in max-w-7xl px-8 pt-24 pb-20">
       <div className="space-y-6">
         <div className="inline-flex items-center gap-4 px-6 py-2.5 rounded-full bg-indigo-500/5 border border-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-[0.5em] shadow-2xl backdrop-blur-md">
           <BookOpen size={14} className="animate-bounce" /> Tree Visualization Lab
         </div>
-        <h1 className="text-8xl font-black bg-gradient-to-b from-white via-white to-slate-700 bg-clip-text text-transparent tracking-tighter leading-[0.85]">
+        <h1 className="text-7xl font-black bg-gradient-to-b from-white via-white to-slate-700 bg-clip-text text-transparent tracking-tighter leading-[0.9]">
           Master The<br />Flow of Logic
         </h1>
-        <p className="text-slate-500 text-xs font-black uppercase tracking-[0.4em] opacity-30 max-w-2xl mx-auto">High-Fidelity Step-by-Step Educational Architecture</p>
+        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 max-w-2xl mx-auto">High-Fidelity Step-by-Step Educational Architecture</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 pt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-12 max-w-6xl mx-auto">
         {[
           { id: 'bt', title: 'Binary Tree', icon: <Network size={28} />, color: 'bg-emerald-600', shadow: 'shadow-emerald-900/40', desc: 'Observe structural depth and level-order swaps.' },
           { id: 'bst', title: 'Binary Search Tree', icon: <GitBranch size={28} />, color: 'bg-indigo-600', shadow: 'shadow-indigo-900/40', desc: 'Master recursive comparison logic and pathfinding.' },
           { id: 'avl', title: 'AVL Tree', icon: <RefreshCw size={28} />, color: 'bg-fuchsia-600', shadow: 'shadow-fuchsia-900/40', desc: 'Experience structural stability through rotations.' },
           { id: 'splay', title: 'Splay Tree', icon: <Zap size={28} />, color: 'bg-amber-600', shadow: 'shadow-amber-900/40', desc: 'Self-adjusting search tree for frequent access.' },
-          { id: 'rb', title: 'Red-Black Tree', icon: <ShieldCheck size={28} />, color: 'bg-rose-600', shadow: 'shadow-rose-900/40', desc: 'Highly balanced tree with efficient recoloring.' }
+          { id: 'rb', title: 'Red-Black Tree', icon: <ShieldCheck size={28} />, color: 'bg-rose-600', shadow: 'shadow-rose-900/40', desc: 'Highly balanced tree with efficient recoloring.' },
+          { id: 'b-tree', title: 'B-Tree', icon: <Database size={28} />, color: 'bg-cyan-600', shadow: 'shadow-cyan-900/40', desc: 'Multi-key search tree for large-scale data systems.' }
         ].map((opt) => (
           <button key={opt.id} onClick={() => onSelect(opt.id)} className="group glass w-full p-8 rounded-[2.5rem] border border-white/5 hover:border-indigo-500/30 transition-all hover:scale-105 text-left flex flex-col gap-6 relative overflow-hidden shadow-2xl min-h-[320px]">
             <div className={`p-5 rounded-[2rem] ${opt.color} ${opt.shadow} text-white transition-all group-hover:scale-110 group-hover:rotate-6 w-fit shadow-2xl`}>{opt.icon}</div>
@@ -106,7 +180,7 @@ const Dashboard = ({
   view, onHome, root, highlights, inputValue, setInputValue,
   handleInsert, handleDelete, handleReset, handleTraversal, handleSearch, generateRandomTree,
   isProcessing, showLegend, setShowLegend, canvasRef, scrollRef, canvasSize,
-  logs, traversalResult, traversalType, positions, connections
+  logs, traversalResult, traversalType, positions, connections, setShowRules
 }) => (
   <div className="flex flex-col h-full overflow-hidden bg-[#05060a]">
     <header className="h-20 glass border-b border-white/5 flex items-center px-10 justify-between z-20 shadow-2xl relative">
@@ -121,13 +195,14 @@ const Dashboard = ({
             view === 'bst' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 
             view === 'avl' ? 'bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20' :
             view === 'splay' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+            view === 'b-tree' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
             'bg-rose-500/10 text-rose-400 border border-rose-500/20'
           }`}>
-            {view === 'bt' ? <Network size={22} /> : view === 'bst' ? <GitBranch size={22} /> : view === 'avl' ? <RefreshCw size={22} /> : view === 'splay' ? <Zap size={22} /> : <ShieldCheck size={22} />}
+            {view === 'bt' ? <Network size={22} /> : view === 'bst' ? <GitBranch size={22} /> : view === 'avl' ? <RefreshCw size={22} /> : view === 'splay' ? <Zap size={22} /> : view === 'b-tree' ? <Database size={22} /> : <ShieldCheck size={22} />}
           </div>
           <div className="space-y-1">
             <h1 className="text-base font-black text-white uppercase tracking-tighter leading-none">
-              {view === 'bt' ? 'Binary Tree' : view === 'bst' ? 'Binary Search Tree' : view === 'avl' ? 'AVL Tree' : view === 'splay' ? 'Splay Tree' : 'Red-Black Tree'} Laboratory
+              {view === 'bt' ? 'Binary Tree' : view === 'bst' ? 'Binary Search Tree' : view === 'avl' ? 'AVL Tree' : view === 'splay' ? 'Splay Tree' : view === 'rb' ? 'Red-Black Tree' : 'B-Tree'} Laboratory
             </h1>
             <div className="flex items-center gap-2">
                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
@@ -158,12 +233,20 @@ const Dashboard = ({
         </div>
 
         <div className="flex gap-3">
-          <button onClick={() => generateRandomTree()} disabled={isProcessing} className="p-4 bg-amber-500/10 text-amber-500/60 hover:text-amber-400 hover:bg-amber-500/20 rounded-2xl border border-amber-500/10 transition-all shadow-xl disabled:opacity-50" title="Random Architecture"><RefreshCw size={20} /></button>
+          {view === 'b-tree' && (
+            <button onClick={() => setShowRules(true)} className="px-6 py-4 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-2xl border border-indigo-500/10 transition-all shadow-xl flex items-center gap-3" title="B-Tree Rules">
+              <HelpCircle size={20} />
+              <span className="text-[10px] font-black uppercase tracking-widest">View Rules</span>
+            </button>
+          )}
+          {view !== 'b-tree' && (
+            <button onClick={() => generateRandomTree()} disabled={isProcessing} className="p-4 bg-amber-500/10 text-amber-500/60 hover:text-amber-400 hover:bg-amber-500/20 rounded-2xl border border-amber-500/10 transition-all shadow-xl disabled:opacity-50" title="Random Architecture"><RefreshCw size={20} /></button>
+          )}
           <button onClick={handleReset} disabled={isProcessing} className="p-4 bg-slate-800/40 text-slate-600 hover:text-white rounded-2xl border border-white/5 transition-all shadow-xl disabled:opacity-50" title="Clear Canvas"><Trash2 size={20} /></button>
         </div>
 
         <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-xl border border-white/5 shadow-inner backdrop-blur-sm">
-          {['Pre', 'In', 'Post'].map((type) => (
+          {view !== 'b-tree' && ['Pre', 'In', 'Post'].map((type) => (
             <button key={type} onClick={() => handleTraversal(type + '-Order')} disabled={isProcessing} className="px-3.5 py-2 hover:bg-indigo-500/20 hover:text-indigo-400 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-30 transition-all border border-transparent hover:border-indigo-500/30">{type}</button>
           ))}
         </div>
@@ -205,19 +288,44 @@ const Dashboard = ({
               </filter>
             </defs>
             {connections.map(({ isNew, ...c }) => (
-              <line key={c.id} {...c} stroke="#1e293b" strokeWidth="3" className={`line-transition opacity-40 ${isNew ? 'line-draw text-indigo-500 stroke-indigo-500' : ''}`} />
+              <line 
+                key={c.id} {...c} 
+                stroke="#1e293b" 
+                strokeWidth="3" 
+                className={`line-transition opacity-40 ${isNew ? 'line-draw text-indigo-500 stroke-indigo-500' : ''} ${c.isSearching ? 'path-searching' : ''}`} 
+              />
             ))}
             {positions.map(({ isNew, ...p }) => (
               <g key={p.id} className="node-transition">
-                <circle 
-                  cx={p.x} cy={p.y} r={NODE_RADIUS} 
-                  fill={p.highlight && p.highlight !== 'default' ? COLORS[p.highlight] : (view === 'rb' ? COLORS.rbBlack : COLORS.default)} 
-                  stroke={view === 'rb' ? (p.color === 'RED' ? '#ef4444' : 'rgba(255, 255, 255, 0.1)') : "rgba(255,255,255,0.06)"}
-                  strokeWidth="4" 
-                  filter={p.highlight && p.highlight !== 'default' ? 'url(#glow-node-compact)' : ''} 
-                  className={`transition-all duration-1000 ${p.highlight === 'unbalanced' ? 'pulse-purple' : p.highlight === 'deleting' ? 'pulse-red' : ''} ${isNew ? 'fade-in' : ''}`} 
-                />
-                <text x={p.x} y={p.y} textAnchor="middle" dy=".35em" fill="white" fontSize="18" fontWeight="900" fontFamily="monospace" className="pointer-events-none select-none tracking-tighter">{p.value}</text>
+                {p.type !== 'b-node' && (
+                  <circle 
+                    cx={p.x} cy={p.y} r={NODE_RADIUS} 
+                    fill={p.highlight && p.highlight !== 'default' ? COLORS[p.highlight] : (view === 'rb' ? COLORS.rbBlack : COLORS.default)} 
+                    stroke={view === 'rb' ? (p.color === 'RED' ? '#ef4444' : 'rgba(255, 255, 255, 0.1)') : "rgba(255,255,255,0.06)"}
+                    strokeWidth="4" 
+                    filter={p.highlight && p.highlight !== 'default' ? 'url(#glow-node-compact)' : ''} 
+                    className={`transition-all duration-1000 ${p.highlight === 'unbalanced' ? 'pulse-purple' : p.highlight === 'deleting' ? 'pulse-red' : ''} ${isNew ? 'fade-in' : ''}`} 
+                  />
+                )}
+                {p.type === 'b-node' ? (
+                  <g className="b-capsule-animate">
+                    <rect 
+                      x={p.x - p.width/2} y={p.y - 20} width={p.width} height={40} rx="12" 
+                      fill={p.highlight && p.highlight !== 'default' ? COLORS[p.highlight] : "#1e293b"} 
+                      stroke={p.highlight && p.highlight !== 'default' ? "white" : "#334155"} 
+                      strokeWidth="2" 
+                      className="b-capsule-animate"
+                      filter={p.highlight && p.highlight !== 'default' ? 'url(#glow-node-compact)' : ''}
+                    />
+                    {p.keys.map((k, i) => (
+                      <g key={i} className="key-pop" style={{ animationDelay: `${i * 100}ms` }}>
+                        <text x={p.x - p.width/2 + 25 + i * 40} y={p.y} textAnchor="middle" dy=".35em" fill="white" fontSize="14" fontWeight="900" fontFamily="monospace" className="pointer-events-none select-none">{k}</text>
+                      </g>
+                    ))}
+                  </g>
+                ) : (
+                  <text x={p.x} y={p.y} textAnchor="middle" dy=".35em" fill="white" fontSize="18" fontWeight="900" fontFamily="monospace" className="pointer-events-none select-none tracking-tighter">{p.value}</text>
+                )}
                 
                 {view === 'avl' && (
                   <g transform={`translate(${p.x}, ${p.y - 48})`} className="select-none pointer-events-none">
@@ -314,6 +422,9 @@ const Dashboard = ({
 
 function App() {
   const [view, setView] = useState('welcome');
+  const [bTreeOrder, setBTreeOrder] = useState(3);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const [root, setRoot] = useState(null);
   const [highlights, setHighlights] = useState({});
   const [inputValue, setInputValue] = useState('');
@@ -343,6 +454,14 @@ function App() {
   
   const cloneTree = (n) => {
     if (!n) return null;
+    if (view === 'b-tree') {
+      const nn = new Node(null);
+      nn.id = n.id;
+      nn.keys = [...n.keys];
+      nn.isLeaf = n.isLeaf;
+      nn.children = n.children.map(c => cloneTree(c));
+      return nn;
+    }
     const nn = new Node(n.value); nn.id = n.id; nn.height = n.height; nn.color = n.color;
     nn.left = cloneTree(n.left); nn.right = cloneTree(n.right);
     return nn;
@@ -397,6 +516,8 @@ function App() {
           }
         }
       });
+    } else if (mode === 'b-tree') {
+      return; // Random tree disabled for B-Tree
     } else {
       vals.sort((a,b) => a-b);
       const build = (l, r, d = 0) => {
@@ -596,6 +717,80 @@ function App() {
         tm.root = await ins(tm.root, val);
         if (tm.root) tm.root.color = 'BLACK';
         setRoot(cloneTree(tm.root));
+      } else if (view === 'b-tree') {
+        const T_MAX_KEYS = bTreeOrder - 1;
+        const tm = { root: cloneTree(root) || new Node(val) };
+
+        const contains = (n, k) => {
+          if (!n) return false;
+          if (n.keys.includes(k)) return true;
+          for (let child of n.children) if (contains(child, k)) return true;
+          return false;
+        };
+
+        if (root && contains(root, val)) {
+          addLog(`Key ${val} already exists in architecture. Skipping duplicate insertion.`, 'warning');
+          setIsProcessing(false);
+          return;
+        }
+
+        if (!root) {
+          tm.root.keys = [val];
+          tm.root.isLeaf = true;
+        } else {
+          const splitChild = async (x, i, y) => {
+            const z = new Node(null);
+            z.isLeaf = y.isLeaf;
+            const midIdx = Math.floor(y.keys.length / 2);
+            const midKey = y.keys[midIdx];
+            
+            const rightKeys = y.keys.splice(midIdx + 1);
+            const leftKeys = y.keys.splice(0, midIdx);
+            y.keys = [midKey]; // Temporarily hold midKey to push up
+            
+            z.keys = rightKeys;
+            const promotedKey = y.keys.pop();
+            y.keys = leftKeys;
+
+            if (!y.isLeaf) z.children = y.children.splice(midIdx + 1);
+            
+            x.children.splice(i + 1, 0, z);
+            x.keys.splice(i, 0, promotedKey);
+            
+            addLog(`Splitting node: pushing ${promotedKey} up to parent.`, 'warning');
+            setRoot(cloneTree(tm.root)); await delay(1000);
+          };
+
+          const insertNonFull = async (x, k) => {
+            let i = x.keys.length - 1;
+            if (x.isLeaf) {
+              x.keys.push(null);
+              while (i >= 0 && x.keys[i] > k) { x.keys[i + 1] = x.keys[i]; i--; }
+              x.keys[i + 1] = k;
+              addLog(`Inserted ${k} into leaf node.`, 'success');
+              setRoot(cloneTree(tm.root)); await delay(800);
+            } else {
+              while (i >= 0 && x.keys[i] > k) i--;
+              i++;
+              await slowVisit(x.id, 'searching', `Descending to child at index ${i}...`);
+              if (x.children[i].keys.length === T_MAX_KEYS) {
+                await splitChild(x, i, x.children[i]);
+                if (k > x.keys[i]) i++;
+              }
+              await insertNonFull(x.children[i], k);
+            }
+          };
+
+          if (tm.root.keys.length === T_MAX_KEYS) {
+            const s = new Node(null);
+            s.isLeaf = false;
+            s.children = [tm.root];
+            await splitChild(s, 0, tm.root);
+            tm.root = s;
+          }
+          await insertNonFull(tm.root, val);
+        }
+        setRoot(cloneTree(tm.root));
       } else {
         if (!root) setRoot(new Node(val));
         else {
@@ -790,6 +985,93 @@ function App() {
           }
         };
         await del(tm, val);
+      } else if (view === 'b-tree') {
+        const tm = { root: cloneTree(root) };
+        if (!root) return;
+
+        const T_MIN = Math.ceil(bTreeOrder / 2);
+
+        const getPred = (n, idx) => {
+          let curr = n.children[idx];
+          while (!curr.isLeaf) curr = curr.children[curr.keys.length];
+          return curr.keys[curr.keys.length - 1];
+        };
+
+        const getSucc = (n, idx) => {
+          let curr = n.children[idx + 1];
+          while (!curr.isLeaf) curr = curr.children[0];
+          return curr.keys[0];
+        };
+
+        const fill = async (n, idx) => {
+          if (idx !== 0 && n.children[idx - 1].keys.length >= T_MIN) {
+            // Borrow from prev
+            let child = n.children[idx], sibling = n.children[idx - 1];
+            child.keys.unshift(n.keys[idx - 1]);
+            if (!child.isLeaf) child.children.unshift(sibling.children.pop());
+            n.keys[idx - 1] = sibling.keys.pop();
+            addLog("Borrowing from left sibling.", "warning");
+          } else if (idx !== n.keys.length && n.children[idx + 1].keys.length >= T_MIN) {
+            // Borrow from next
+            let child = n.children[idx], sibling = n.children[idx + 1];
+            child.keys.push(n.keys[idx]);
+            if (!child.isLeaf) child.children.push(sibling.children.shift());
+            n.keys[idx] = sibling.keys.shift();
+            addLog("Borrowing from right sibling.", "warning");
+          } else {
+            // Merge
+            if (idx !== n.keys.length) {
+              let child = n.children[idx], sibling = n.children[idx + 1];
+              child.keys.push(n.keys.splice(idx, 1)[0]);
+              child.keys.push(...sibling.keys);
+              if (!child.isLeaf) child.children.push(...sibling.children);
+              n.children.splice(idx + 1, 1);
+            } else {
+              let child = n.children[idx - 1], sibling = n.children[idx];
+              child.keys.push(n.keys.splice(idx - 1, 1)[0]);
+              child.keys.push(...sibling.keys);
+              if (!child.isLeaf) child.children.push(...sibling.children);
+              n.children.splice(idx, 1);
+            }
+            addLog("Merging nodes to maintain minimum degree.", "warning");
+          }
+          setRoot(cloneTree(tm.root)); await delay(1000);
+        };
+
+        const delInternal = async (n, k) => {
+          let idx = 0; while (idx < n.keys.length && n.keys[idx] < k) idx++;
+          if (idx < n.keys.length && n.keys[idx] === k) {
+            updateHighlight(n.id, 'deleting'); await delay(800);
+            if (n.isLeaf) {
+              n.keys.splice(idx, 1);
+              addLog(`Removed ${k} from leaf.`, 'success');
+            } else {
+              if (n.children[idx].keys.length >= T_MIN) {
+                const pred = getPred(n, idx);
+                n.keys[idx] = pred;
+                await delInternal(n.children[idx], pred);
+              } else if (n.children[idx + 1].keys.length >= T_MIN) {
+                const succ = getSucc(n, idx);
+                n.keys[idx] = succ;
+                await delInternal(n.children[idx + 1], succ);
+              } else {
+                await fill(n, idx);
+                await delInternal(n.children[idx], k);
+              }
+            }
+          } else {
+            if (n.isLeaf) return;
+            let lastChild = idx === n.keys.length;
+            if (n.children[idx].keys.length < T_MIN) await fill(n, idx);
+            if (lastChild && idx > n.keys.length) await delInternal(n.children[idx - 1], k);
+            else await delInternal(n.children[idx], k);
+          }
+          setRoot(cloneTree(tm.root));
+        };
+
+        await delInternal(tm.root, val);
+        if (tm.root.keys.length === 0) tm.root = tm.root.children[0] || null;
+        setRoot(cloneTree(tm.root));
       } else {
         const tm = { root: cloneTree(root) };
         const del = async (n, v) => {
@@ -834,6 +1116,13 @@ function App() {
     try {
       const s = async (n, v) => {
         if (!n) return null;
+        if (view === 'b-tree') {
+          let i = 0; while (i < n.keys.length && v > n.keys[i]) i++;
+          await slowVisit(n.id, 'searching', `Checking node with keys [${n.keys.join(', ')}]...`);
+          if (i < n.keys.length && n.keys[i] === v) { updateHighlight(n.id, 'processed'); return n; }
+          if (n.isLeaf) return null;
+          return await s(n.children[i], v);
+        }
         await slowVisit(n.id, 'searching', `Checking ${n.value}...`);
         if (n.value === v) { updateHighlight(n.id, 'processed'); return n; }
         return v < n.value ? await s(n.left, v) : await s(n.right, v);
@@ -877,31 +1166,88 @@ function App() {
     const calc = (n, x, d, w) => {
       if (!n) return;
       const y = (d + 1) * LAYER_HEIGHT + 20;
-      const hl = getHeight(n.left); const hr = getHeight(n.right);
-      p.push({ id: n.id, value: n.value, depth: d, hl, hr, bf: hl - hr, x, y, color: n.color, highlight: highlights[n.id] || 'default' });
-      const nY = (d + 2) * LAYER_HEIGHT + 20;
-      const currentGap = Math.max(w / 4, MIN_GAP / 2);
-      if (n.left) { c.push({ id: `l-${n.left.id}`, x1: x, y1: y, x2: x - currentGap, y2: nY, isNew: highlights[n.left.id] === 'inserting' }); calc(n.left, x - currentGap, d + 1, currentGap * 2); }
-      if (n.right) { c.push({ id: `r-${n.right.id}`, x1: x, y1: y, x2: x + currentGap, y2: nY, isNew: highlights[n.right.id] === 'inserting' }); calc(n.right, x + currentGap, d + 1, currentGap * 2); }
+      
+      if (view === 'b-tree') {
+        const nodeWidth = n.keys.length * 40 + 20;
+        p.push({ id: n.id, keys: [...n.keys], depth: d, x, y, isLeaf: n.isLeaf, highlight: highlights[n.id] || 'default', type: 'b-node', width: nodeWidth });
+        const nY = (d + 2) * LAYER_HEIGHT + 20;
+        const numChildren = n.children.length;
+        if (numChildren > 0) {
+          const totalWidth = w;
+          const startX = x - totalWidth / 2 + totalWidth / (numChildren * 2);
+          const gap = totalWidth / numChildren;
+          n.children.forEach((child, i) => {
+            const childX = startX + i * gap;
+            c.push({ 
+              id: `c-${child.id}`, 
+              x1: x, y1: y + 15, 
+              x2: childX, y2: nY - 15, 
+              isNew: highlights[child.id] === 'inserting',
+              isSearching: highlights[child.id] === 'searching' || highlights[n.id] === 'searching'
+            });
+            calc(child, childX, d + 1, gap);
+          });
+        }
+      } else {
+        const hl = getHeight(n.left); const hr = getHeight(n.right);
+        p.push({ id: n.id, value: n.value, depth: d, hl, hr, bf: hl - hr, x, y, color: n.color, highlight: highlights[n.id] || 'default' });
+        const nY = (d + 2) * LAYER_HEIGHT + 20;
+        const currentGap = Math.max(w / 4, MIN_GAP / 2);
+        if (n.left) { c.push({ id: `l-${n.left.id}`, x1: x, y1: y, x2: x - currentGap, y2: nY, isNew: highlights[n.left.id] === 'inserting' }); calc(n.left, x - currentGap, d + 1, currentGap * 2); }
+        if (n.right) { c.push({ id: `r-${n.right.id}`, x1: x, y1: y, x2: x + currentGap, y2: nY, isNew: highlights[n.right.id] === 'inserting' }); calc(n.right, x + currentGap, d + 1, currentGap * 2); }
+      }
     };
     calc(root, canvasSize.width / 2, 0, canvasSize.width * 0.75);
     return { positions: p, connections: c };
-  }, [root, highlights, canvasSize.width]);
+  }, [root, highlights, canvasSize.width, view]);
+
+  const handleReset = () => {
+    setRoot(null);
+    setLogs([]);
+    setTraversalResult([]);
+    setTraversalType('');
+    resetHighlights();
+    addLog("Laboratory reset. Memory core cleared.", "success");
+  };
+
+  const onSelectView = (v) => {
+    if (v === 'b-tree') {
+      setShowOrderModal(true);
+    } else {
+      setView(v);
+      resetHighlights();
+      setRoot(null);
+      setLogs([]);
+      setTraversalResult([]);
+    }
+  };
+
+  const onSelectBTreeOrder = (order) => {
+    setBTreeOrder(order);
+    setShowOrderModal(false);
+    setView('b-tree');
+    resetHighlights();
+    setRoot(null);
+    setLogs([]);
+    setTraversalResult([]);
+    addLog(`Laboratory initialized with Order-${order} architecture. No pre-loaded nodes.`, 'success');
+  };
 
   return (
-    <div className="flex flex-col h-screen bg-[#05060a] text-slate-200 selection:bg-indigo-500/30 font-sans">
-      {view === 'welcome' ? <WelcomeScreen onSelect={setView} /> : 
+    <div className="h-screen w-screen overflow-hidden flex flex-col font-sans selection:bg-indigo-500/30">
+      {view === 'welcome' ? <WelcomeScreen onSelect={onSelectView} /> : (
         <Dashboard 
-          view={view} onHome={() => { setView('welcome'); setRoot(null); setLogs([]); setTraversalResult([]); }} 
-          root={root} highlights={highlights} inputValue={inputValue} setInputValue={setInputValue} 
-          handleInsert={handleInsert} handleDelete={handleDelete} handleSearch={handleSearch} 
-          handleReset={() => { setRoot(null); setLogs([]); setTraversalResult([]); setTraversalType(''); resetHighlights(); }} 
-          handleTraversal={handleTraversal} generateRandomTree={generateRandomTree} 
-          logs={logs} traversalResult={traversalResult} traversalType={traversalType} positions={positions} 
-          connections={connections} 
-          isProcessing={isProcessing} showLegend={showLegend} setShowLegend={setShowLegend} 
-          canvasRef={canvasRef} scrollRef={scrollRef} canvasSize={canvasSize} 
-        />}
+          view={view} onHome={() => setView('welcome')} root={root} highlights={highlights}
+          inputValue={inputValue} setInputValue={setInputValue} handleInsert={handleInsert}
+          handleDelete={handleDelete} handleReset={handleReset} handleTraversal={handleTraversal}
+          handleSearch={handleSearch} generateRandomTree={generateRandomTree} isProcessing={isProcessing}
+          showLegend={showLegend} setShowLegend={setShowLegend} canvasRef={canvasRef} scrollRef={scrollRef}
+          canvasSize={canvasSize} logs={logs} traversalResult={traversalResult} traversalType={traversalType}
+          positions={positions} connections={connections} setShowRules={setShowRules}
+        />
+      )}
+      {showOrderModal && <OrderSelectionModal onSelect={onSelectBTreeOrder} onClose={() => setShowOrderModal(false)} />}
+      {showRules && <RulesModal order={bTreeOrder} onClose={() => setShowRules(false)} />}
     </div>
   );
 }
