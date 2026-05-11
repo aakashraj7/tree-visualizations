@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { 
-  Plus, 
-  Trash2, 
-  RotateCcw, 
-  Search, 
+import {
+  Plus,
+  Trash2,
+  RotateCcw,
+  Search,
   Terminal,
   Activity,
   GitBranch,
@@ -27,7 +27,7 @@ import Editor from '@monaco-editor/react';
 // --- Constants ---
 const NODE_RADIUS = 28;
 const LAYER_HEIGHT = 100;
-const MIN_GAP = 70; 
+const MIN_GAP = 70;
 const B_TREE_T = 2; // Minimum degree for B-Tree
 
 // Educational Delays
@@ -38,12 +38,12 @@ const HIGHLIGHT_RESET_DELAY = 800;
 
 const COLORS = {
   default: '#334155',
-  searching: '#fbbf24', 
-  inserting: '#60a5fa', 
-  deleting: '#f87171',  
-  successor: '#34d399', 
-  traversal: '#818cf8', 
-  unbalanced: '#a855f7', 
+  searching: '#fbbf24',
+  inserting: '#60a5fa',
+  deleting: '#f87171',
+  successor: '#34d399',
+  traversal: '#818cf8',
+  unbalanced: '#a855f7',
   processed: '#6366f1',
   rbRed: '#ef4444',
   rbBlack: '#0f172a',
@@ -76,7 +76,7 @@ const RulesModal = ({ onClose, order, view }) => {
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-12 bg-black/85 backdrop-blur-2xl fade-in overflow-hidden">
       <div className="w-full max-w-2xl glass rounded-[3.5rem] border border-white/10 shadow-2xl p-12 relative overflow-hidden scale-in">
         <div className="absolute top-0 right-0 p-8">
-           <button onClick={onClose} className="p-3 hover:bg-white/10 rounded-[1.25rem] text-slate-500 hover:text-white transition-all"><X size={32} /></button>
+          <button onClick={onClose} className="p-3 hover:bg-white/10 rounded-[1.25rem] text-slate-500 hover:text-white transition-all"><X size={32} /></button>
         </div>
         <div className="space-y-10">
           <div className="flex items-center gap-6">
@@ -105,9 +105,9 @@ const RulesModal = ({ onClose, order, view }) => {
           </div>
 
           <div className="p-10 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/10 text-sm leading-relaxed text-slate-400 font-bold space-y-4">
-             <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> All leaf nodes must be at the same depth.</p>
-             <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> The root must have at least two children if it is not a leaf node.</p>
-             <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> Every internal node (except root) has at least ⌈{order}/2⌉ children.</p>
+            <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> All leaf nodes must be at the same depth.</p>
+            <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> The root must have at least two children if it is not a leaf node.</p>
+            <p className="flex items-start gap-4"><span className="text-indigo-500 mt-1">•</span> Every internal node (except root) has at least ⌈{order}/2⌉ children.</p>
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@ const OrderSelectionModal = ({ onSelect, onClose, view }) => (
           </button>
         ))}
       </div>
-      
+
       <button onClick={onClose} className="text-slate-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all border border-white/5 px-8 py-4 rounded-2xl hover:bg-white/5">Cancel Session</button>
     </div>
   </div>
@@ -178,7 +178,7 @@ const WelcomeScreen = ({ onSelect }) => (
   </div>
 );
 
-const Dashboard = ({ 
+const Dashboard = ({
   view, onHome, root, highlights, inputValue, setInputValue,
   handleInsert, handleDelete, handleReset, handleTraversal, handleSearch, generateRandomTree,
   isProcessing, showLegend, setShowLegend, canvasRef, scrollRef, canvasSize,
@@ -192,15 +192,14 @@ const Dashboard = ({
         </button>
         <div className="h-10 w-[1px] bg-white/10" />
         <div className="flex items-center gap-5">
-          <div className={`p-4 rounded-[1.25rem] shadow-2xl ${
-            view === 'bt' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
-            view === 'bst' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 
-            view === 'avl' ? 'bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20' :
-            view === 'splay' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-            view === 'b-tree' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
-            view === 'b-plus-tree' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-            'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-          }`}>
+          <div className={`p-4 rounded-[1.25rem] shadow-2xl ${view === 'bt' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+              view === 'bst' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                view === 'avl' ? 'bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20' :
+                  view === 'splay' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                    view === 'b-tree' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
+                      view === 'b-plus-tree' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                        'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+            }`}>
             {view === 'bt' ? <Network size={22} /> : view === 'bst' ? <GitBranch size={22} /> : view === 'avl' ? <RefreshCw size={22} /> : view === 'splay' ? <Zap size={22} /> : view === 'b-tree' ? <Database size={22} /> : view === 'b-plus-tree' ? <LayoutGrid size={22} /> : <ShieldCheck size={22} />}
           </div>
           <div className="space-y-1">
@@ -208,8 +207,8 @@ const Dashboard = ({
               {view === 'bt' ? 'Binary Tree' : view === 'bst' ? 'Binary Search Tree' : view === 'avl' ? 'AVL Tree' : view === 'splay' ? 'Splay Tree' : view === 'rb' ? 'Red-Black Tree' : view === 'b-plus-tree' ? 'B+ Tree' : 'B-Tree'} Laboratory
             </h1>
             <div className="flex items-center gap-2">
-               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
-               <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.4em]">Engine Active</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
+              <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.4em]">Engine Active</span>
             </div>
           </div>
         </div>
@@ -218,15 +217,15 @@ const Dashboard = ({
       <div className="flex items-center gap-6">
         <div className="flex bg-slate-900/40 p-1.5 rounded-[1.3rem] border border-white/5 items-center shadow-inner">
           <div className="flex items-center bg-black/60 rounded-xl px-2 border border-white/5 mr-3">
-             <Cpu size={14} className="text-slate-600 mr-2" />
-             <input 
-               type="number" 
-               value={inputValue} 
-               onChange={(e) => setInputValue(e.target.value)} 
-               placeholder="00" 
-               className="bg-transparent px-2 py-2 text-base focus:outline-none w-14 text-center font-mono font-black text-white selection:bg-indigo-500" 
-               onKeyDown={(e) => e.key === 'Enter' && handleInsert()} 
-             />
+            <Cpu size={14} className="text-slate-600 mr-2" />
+            <input
+              type="number"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="00"
+              className="bg-transparent px-2 py-2 text-base focus:outline-none w-14 text-center font-mono font-black text-white selection:bg-indigo-500"
+              onKeyDown={(e) => e.key === 'Enter' && handleInsert()}
+            />
           </div>
           <div className="flex gap-1.5">
             <button onClick={handleInsert} disabled={isProcessing} className="px-6 py-2.5 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50">INSERT</button>
@@ -294,47 +293,47 @@ const Dashboard = ({
               </marker>
             </defs>
             {connections.map(({ isNew, isLeafLink, ...c }) => (
-              <line 
-                key={c.id} {...c} 
-                stroke={isLeafLink ? "#10b981" : "#1e293b"} 
-                strokeWidth={isLeafLink ? "2" : "3"} 
+              <line
+                key={c.id} {...c}
+                stroke={isLeafLink ? "#10b981" : "#1e293b"}
+                strokeWidth={isLeafLink ? "2" : "3"}
                 strokeDasharray={isLeafLink ? "5,5" : ""}
                 markerEnd={isLeafLink ? "url(#arrowhead)" : ""}
-                className={`line-transition ${isLeafLink ? 'opacity-80' : 'opacity-40'} ${isNew ? 'line-draw text-indigo-500 stroke-indigo-500' : ''} ${c.isSearching ? 'path-searching' : ''}`} 
+                className={`line-transition ${isLeafLink ? 'opacity-80' : 'opacity-40'} ${isNew ? 'line-draw text-indigo-500 stroke-indigo-500' : ''} ${c.isSearching ? 'path-searching' : ''}`}
               />
             ))}
             {positions.map(({ isNew, ...p }) => (
               <g key={p.id} className="node-transition">
                 {p.type !== 'b-node' && (
-                  <circle 
-                    cx={p.x} cy={p.y} r={NODE_RADIUS} 
-                    fill={p.highlight && p.highlight !== 'default' ? COLORS[p.highlight] : (view === 'rb' ? COLORS.rbBlack : COLORS.default)} 
+                  <circle
+                    cx={p.x} cy={p.y} r={NODE_RADIUS}
+                    fill={p.highlight && p.highlight !== 'default' ? COLORS[p.highlight] : (view === 'rb' ? COLORS.rbBlack : COLORS.default)}
                     stroke={view === 'rb' ? (p.color === 'RED' ? '#ef4444' : 'rgba(255, 255, 255, 0.1)') : "rgba(255,255,255,0.06)"}
-                    strokeWidth="4" 
-                    filter={p.highlight && p.highlight !== 'default' ? 'url(#glow-node-compact)' : ''} 
-                    className={`transition-all duration-1000 ${p.highlight === 'unbalanced' ? 'pulse-purple' : p.highlight === 'deleting' ? 'pulse-red' : ''} ${isNew ? 'fade-in' : ''}`} 
+                    strokeWidth="4"
+                    filter={p.highlight && p.highlight !== 'default' ? 'url(#glow-node-compact)' : ''}
+                    className={`transition-all duration-1000 ${p.highlight === 'unbalanced' ? 'pulse-purple' : p.highlight === 'deleting' ? 'pulse-red' : ''} ${isNew ? 'fade-in' : ''}`}
                   />
                 )}
                 {p.type === 'b-node' ? (
                   <g className="b-capsule-animate">
-                    <rect 
-                      x={p.x - p.width/2} y={p.y - 20} width={p.width} height={40} rx="12" 
-                      fill={p.highlight && p.highlight !== 'default' ? COLORS[p.highlight] : "#1e293b"} 
-                      stroke={p.highlight && p.highlight !== 'default' ? "white" : "#334155"} 
-                      strokeWidth="2" 
+                    <rect
+                      x={p.x - p.width / 2} y={p.y - 20} width={p.width} height={40} rx="12"
+                      fill={p.highlight && p.highlight !== 'default' ? COLORS[p.highlight] : "#1e293b"}
+                      stroke={p.highlight && p.highlight !== 'default' ? "white" : "#334155"}
+                      strokeWidth="2"
                       className="b-capsule-animate"
                       filter={p.highlight && p.highlight !== 'default' ? 'url(#glow-node-compact)' : ''}
                     />
                     {p.keys.map((k, i) => (
                       <g key={i} className="key-pop" style={{ animationDelay: `${i * 100}ms` }}>
-                        <text x={p.x - p.width/2 + 25 + i * 40} y={p.y} textAnchor="middle" dy=".35em" fill="white" fontSize="14" fontWeight="900" fontFamily="monospace" className="pointer-events-none select-none">{k}</text>
+                        <text x={p.x - p.width / 2 + 25 + i * 40} y={p.y} textAnchor="middle" dy=".35em" fill="white" fontSize="14" fontWeight="900" fontFamily="monospace" className="pointer-events-none select-none">{k}</text>
                       </g>
                     ))}
                   </g>
                 ) : (
                   <text x={p.x} y={p.y} textAnchor="middle" dy=".35em" fill="white" fontSize="18" fontWeight="900" fontFamily="monospace" className="pointer-events-none select-none tracking-tighter">{p.value}</text>
                 )}
-                
+
                 {view === 'avl' && (
                   <g transform={`translate(${p.x}, ${p.y - 48})`} className="select-none pointer-events-none">
                     <rect x="-42" y="-14" width="84" height="28" rx="14" fill="#020617" stroke="#6366f1" strokeWidth="1.5" className="shadow-2xl" />
@@ -378,14 +377,14 @@ const Dashboard = ({
       <aside className="w-[420px] glass border-l border-white/5 flex flex-col z-20 shadow-[0_0_100px_rgba(0,0,0,0.4)] relative">
         <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500/20 via-transparent to-fuchsia-500/20 opacity-30" />
         <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.03] backdrop-blur-xl">
-           <div className="flex items-center gap-5">
-              <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 shadow-inner"><Terminal size={22} className="text-indigo-400" /></div>
-              <div>
-                <h3 className="text-xl font-black uppercase tracking-tight text-white mb-0.5">Step Logic</h3>
-                <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em]">Educational explanation</p>
-              </div>
-           </div>
-           <Activity size={20} className="text-emerald-500/30 animate-pulse" />
+          <div className="flex items-center gap-5">
+            <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 shadow-inner"><Terminal size={22} className="text-indigo-400" /></div>
+            <div>
+              <h3 className="text-xl font-black uppercase tracking-tight text-white mb-0.5">Step Logic</h3>
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em]">Educational explanation</p>
+            </div>
+          </div>
+          <Activity size={20} className="text-emerald-500/30 animate-pulse" />
         </div>
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-4 font-mono text-[13px] custom-scrollbar selection:bg-indigo-500/40 scroll-smooth">
@@ -396,30 +395,29 @@ const Dashboard = ({
             </div>
           ) : (
             logs.map((l) => (
-              <div key={l.id} className={`pl-4 border-l-2 py-1 transition-all group ${
-                l.type === 'success' ? 'border-emerald-500 text-emerald-300' : 
-                l.type === 'warning' ? 'border-fuchsia-500 text-fuchsia-400' : 
-                l.type === 'target' ? 'border-red-500 text-red-200' : 
-                l.type === 'start' ? 'border-indigo-500 text-indigo-100' :
-                l.type === 'step' ? 'border-amber-400 text-amber-50' :
-                'border-slate-800 text-slate-500'
-              }`}>
+              <div key={l.id} className={`pl-4 border-l-2 py-1 transition-all group ${l.type === 'success' ? 'border-emerald-500 text-emerald-300' :
+                  l.type === 'warning' ? 'border-fuchsia-500 text-fuchsia-400' :
+                    l.type === 'target' ? 'border-red-500 text-red-200' :
+                      l.type === 'start' ? 'border-indigo-500 text-indigo-100' :
+                        l.type === 'step' ? 'border-amber-400 text-amber-50' :
+                          'border-slate-800 text-slate-500'
+                }`}>
                 <div className="flex items-center gap-3 mb-1 opacity-20 text-[9px] font-black uppercase tracking-[0.2em] select-none">
                   <div className={`w-1.5 h-1.5 rounded-full ${l.type === 'success' ? 'bg-emerald-500' : 'bg-slate-700'}`} />
-                  <span>TRACER INGRESS [{new Date().toLocaleTimeString([], {minute:'2-digit', second:'2-digit'})}]</span>
+                  <span>TRACER INGRESS [{new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' })}]</span>
                 </div>
                 <p className="leading-snug font-bold opacity-80 group-hover:opacity-100 transition-opacity tracking-tight">{l.text}</p>
               </div>
             ))
           )}
         </div>
-        
+
         <div className="p-6 border-t border-white/5 bg-black/30 flex items-center justify-between">
-           <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
-             <ShieldCheck size={14} className="text-emerald-500/40" />
-             <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Educational Kernel v2.1.2</span>
-           </div>
-           <Cpu size={16} className="text-indigo-500/10" />
+          <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
+            <ShieldCheck size={14} className="text-emerald-500/40" />
+            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Educational Kernel v2.1.2</span>
+          </div>
+          <Cpu size={16} className="text-indigo-500/10" />
         </div>
       </aside>
     </div>
@@ -459,7 +457,7 @@ function App() {
   const updateHighlight = (id, color) => setHighlights(p => ({ ...p, [id]: color }));
   const resetHighlights = () => setHighlights({});
   const getHeight = (n) => n ? n.height : 0;
-  
+
   const cloneTree = (n) => {
     if (!n) return null;
     if (view === 'b-tree' || view === 'b-plus-tree') {
@@ -511,7 +509,7 @@ function App() {
 
   const generateRandomTree = useCallback((mode = view) => {
     if (mode === 'welcome') return;
-    const vals = Array.from({length: 6}, () => Math.floor(Math.random() * 90) + 10);
+    const vals = Array.from({ length: 6 }, () => Math.floor(Math.random() * 90) + 10);
     let newRoot = null;
     if (mode === 'bt') {
       vals.forEach(v => {
@@ -525,16 +523,73 @@ function App() {
           }
         }
       });
-    } else if (mode === 'b-tree') {
-      return; // Random tree disabled for B-Tree
+    } else if (mode === 'rb') {
+      const getParent = (currRoot, node) => {
+        const map = new Map();
+        const traverse = (curr, p) => {
+          if (!curr) return;
+          map.set(curr, p); traverse(curr.left, curr); traverse(curr.right, curr);
+        };
+        traverse(currRoot, null);
+        return map.get(node);
+      };
+      const rotateRightSync = (y, tree) => {
+        let x = y.left; if (!x) return y;
+        let T2 = x.right; x.right = y; y.left = T2;
+        if (tree.root === y) tree.root = x;
+        return x;
+      };
+      const rotateLeftSync = (x, tree) => {
+        let y = x.right; if (!y) return x;
+        let T2 = y.left; y.left = x; x.right = T2;
+        if (tree.root === x) tree.root = y;
+        return y;
+      };
+      const tree = { root: null };
+      vals.forEach(v => {
+        let curr = tree.root, pNode = null;
+        while (curr) { pNode = curr; if (v < curr.value) curr = curr.left; else if (v > curr.value) curr = curr.right; else return; }
+        const newNode = new Node(v); newNode.color = 'RED';
+        if (!pNode) tree.root = newNode;
+        else {
+          if (v < pNode.value) pNode.left = newNode; else pNode.right = newNode;
+          let z = newNode;
+          while (getParent(tree.root, z) && getParent(tree.root, z).color === 'RED') {
+            let p = getParent(tree.root, z), g = getParent(tree.root, p);
+            if (!g) break;
+            if (p === g.left) {
+              let u = g.right;
+              if (u && u.color === 'RED') { p.color = 'BLACK'; u.color = 'BLACK'; g.color = 'RED'; z = g; }
+              else {
+                if (z === p.right) { z = p; g.left = rotateLeftSync(p, tree); p = g.left; }
+                p.color = 'BLACK'; g.color = 'RED';
+                const gp = getParent(tree.root, g);
+                if (!gp) tree.root = rotateRightSync(g, tree);
+                else { if (g === gp.left) gp.left = rotateRightSync(g, tree); else gp.right = rotateRightSync(g, tree); }
+              }
+            } else {
+              let u = g.left;
+              if (u && u.color === 'RED') { p.color = 'BLACK'; u.color = 'BLACK'; g.color = 'RED'; z = g; }
+              else {
+                if (z === p.left) { z = p; g.right = rotateRightSync(p, tree); p = g.right; }
+                p.color = 'BLACK'; g.color = 'RED';
+                const gp = getParent(tree.root, g);
+                if (!gp) tree.root = rotateLeftSync(g, tree);
+                else { if (g === gp.left) gp.left = rotateLeftSync(g, tree); else gp.right = rotateLeftSync(g, tree); }
+              }
+            }
+          }
+          tree.root.color = 'BLACK';
+        }
+      });
+      newRoot = tree.root;
     } else {
-      vals.sort((a,b) => a-b);
+      vals.sort((a, b) => a - b);
       const build = (l, r, d = 0) => {
         if (l > r) return null;
-        const m = Math.floor((l+r)/2);
+        const m = Math.floor((l + r) / 2);
         const n = new Node(vals[m]);
-        if (mode === 'rb') n.color = (d % 2 === 0) ? 'BLACK' : 'RED';
-        n.left = build(l, m-1, d + 1); n.right = build(m+1, r, d + 1);
+        n.left = build(l, m - 1, d + 1); n.right = build(m + 1, r, d + 1);
         n.height = 1 + Math.max(getHeight(n.left), getHeight(n.right));
         return n;
       };
@@ -595,7 +650,7 @@ function App() {
           }
           return n;
         };
-        const ins = async (n,v) => {
+        const ins = async (n, v) => {
           if (!n) { const nn = new Node(v); lastId.current = nn.id; return nn; }
           await slowVisit(n.id, 'searching', `Locating...`);
           if (v < n.value) n.left = await ins(n.left, v);
@@ -603,7 +658,7 @@ function App() {
           else return n;
           return await bal(n);
         };
-        if (!tm.root) { tm.root = new Node(val); lastId.current = tm.root.id; } 
+        if (!tm.root) { tm.root = new Node(val); lastId.current = tm.root.id; }
         else tm.root = await ins(tm.root, val);
         setRoot(cloneTree(tm.root));
       } else if (view === 'bst') {
@@ -615,7 +670,7 @@ function App() {
           else if (v > n.value) n.right = await ins(n.right, v);
           return n;
         };
-        if (!t) { const nr = new Node(val); lastId.current = nr.id; setRoot(nr); } 
+        if (!t) { const nr = new Node(val); lastId.current = nr.id; setRoot(nr); }
         else setRoot(await ins(t, val));
       } else if (view === 'splay') {
         const tm = { root: cloneTree(root) };
@@ -626,7 +681,7 @@ function App() {
           else if (v > n.value) n.right = await bstIns(n.right, v);
           return n;
         };
-        if (!tm.root) { tm.root = new Node(val); lastId.current = tm.root.id; } 
+        if (!tm.root) { tm.root = new Node(val); lastId.current = tm.root.id; }
         else {
           tm.root = await bstIns(tm.root, val);
           setRoot(cloneTree(tm.root)); await delay(800);
@@ -708,7 +763,8 @@ function App() {
               }
             }
           }
-          sharedTm.root.color = 'BLACK'; setRoot(cloneTree(sharedTm.root));
+          if (sharedTm.root) sharedTm.root.color = 'BLACK';
+          setRoot(cloneTree(sharedTm.root));
         };
         const ins = async (n, v) => {
           let curr = n; let pNode = null;
@@ -843,10 +899,10 @@ function App() {
           while (nodeToSplit && nodeToSplit.keys.length > T_MAX_KEYS) {
             const isLeaf = nodeToSplit.isLeaf;
             const midIdx = isLeaf ? Math.ceil(nodeToSplit.keys.length / 2) : Math.floor(nodeToSplit.keys.length / 2);
-            
+
             const newNode = new Node(null);
             newNode.isLeaf = isLeaf;
-            
+
             let promotedKey;
             if (isLeaf) {
               newNode.keys = nodeToSplit.keys.slice(midIdx);
@@ -973,8 +1029,9 @@ function App() {
                 }
                 s = xParent.right;
               }
-              if ((!s.left || s.left.color === 'BLACK') && (!s.right || s.right.color === 'BLACK')) {
-                s.color = 'RED'; x = xParent; xParent = getParent(sharedTm, x);
+              if (!s || ((!s.left || s.left.color === 'BLACK') && (!s.right || s.right.color === 'BLACK'))) {
+                if (s) s.color = 'RED';
+                x = xParent; xParent = getParent(sharedTm, x);
               } else {
                 if (!s.right || s.right.color === 'BLACK') {
                   if (s.left) s.left.color = 'BLACK';
@@ -1004,8 +1061,9 @@ function App() {
                 }
                 s = xParent.left;
               }
-              if ((!s.right || s.right.color === 'BLACK') && (!s.left || s.left.color === 'BLACK')) {
-                s.color = 'RED'; x = xParent; xParent = getParent(sharedTm, x);
+              if (!s || ((!s.right || s.right.color === 'BLACK') && (!s.left || s.left.color === 'BLACK'))) {
+                if (s) s.color = 'RED';
+                x = xParent; xParent = getParent(sharedTm, x);
               } else {
                 if (!s.left || s.left.color === 'BLACK') {
                   if (s.right) s.right.color = 'BLACK';
@@ -1026,6 +1084,7 @@ function App() {
             }
           }
           if (x) x.color = 'BLACK';
+          if (sharedTm.root) sharedTm.root.color = 'BLACK';
           setRoot(cloneTree(sharedTm.root));
         };
 
@@ -1360,9 +1419,9 @@ function App() {
         else if (t === 'In-Order') { await tr(n.left); await v(n); await tr(n.right); }
         else { await tr(n.left); await tr(n.right); await v(n); }
       };
-      const v = async (n) => { 
-        updateHighlight(n.id, 'traversal'); seq.push(n.value); setTraversalResult([...seq]); 
-        addLog(`Visit: ${n.value}`, 'traversal'); await delay(600); 
+      const v = async (n) => {
+        updateHighlight(n.id, 'traversal'); seq.push(n.value); setTraversalResult([...seq]);
+        addLog(`Visit: ${n.value}`, 'traversal'); await delay(600);
         updateHighlight(n.id, 'default');
       };
       await tr(root);
@@ -1377,7 +1436,7 @@ function App() {
     const calc = (n, x, d, w) => {
       if (!n) return;
       const y = (d + 1) * LAYER_HEIGHT + 20;
-      
+
       if (view === 'b-tree' || view === 'b-plus-tree') {
         const nodeWidth = n.keys.length * 40 + 20;
         p.push({ id: n.id, keys: [...n.keys], depth: d, x, y, isLeaf: n.isLeaf, highlight: highlights[n.id] || 'default', type: 'b-node', width: nodeWidth });
@@ -1391,10 +1450,10 @@ function App() {
           const gap = totalWidth / numChildren;
           n.children.forEach((child, i) => {
             const childX = startX + i * gap;
-            c.push({ 
-              id: `c-${child.id}`, 
-              x1: x, y1: y + 15, 
-              x2: childX, y2: nY - 15, 
+            c.push({
+              id: `c-${child.id}`,
+              x1: x, y1: y + 15,
+              x2: childX, y2: nY - 15,
               isNew: highlights[child.id] === 'inserting',
               isSearching: highlights[child.id] === 'searching' || highlights[n.id] === 'searching'
             });
@@ -1411,7 +1470,7 @@ function App() {
       }
     };
     calc(root, canvasSize.width / 2, 0, canvasSize.width * 0.75);
-    
+
     // Add horizontal links for B+ Tree leaves
     if (view === 'b-plus-tree' && leaves.length > 1) {
       leaves.sort((a, b) => a.x - b.x);
@@ -1420,8 +1479,8 @@ function App() {
           id: `leaf-link-${i}`,
           x1: leaves[i].x + leaves[i].width / 2,
           y1: leaves[i].y,
-          x2: leaves[i+1].x - leaves[i+1].width / 2,
-          y2: leaves[i+1].y,
+          x2: leaves[i + 1].x - leaves[i + 1].width / 2,
+          y2: leaves[i + 1].y,
           isLeafLink: true
         });
       }
@@ -1465,7 +1524,7 @@ function App() {
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col font-sans selection:bg-indigo-500/30">
       {view === 'welcome' ? <WelcomeScreen onSelect={onSelectView} /> : (
-        <Dashboard 
+        <Dashboard
           view={view} onHome={() => setView('welcome')} root={root} highlights={highlights}
           inputValue={inputValue} setInputValue={setInputValue} handleInsert={handleInsert}
           handleDelete={handleDelete} handleReset={handleReset} handleTraversal={handleTraversal}
